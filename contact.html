@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us - Daik Media</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-logo">
+        <a href="homepage.html">
+          <i class="fas fa-wifi"></i>
+          <span>Daik Media</span>
+        </a>
+      </div>
+      <ul class="nav-menu">
+        <li><a href="homepage.html" class="nav-link">Home</a></li>
+        <li><a href="services.html" class="nav-link">Services</a></li>
+        <li><a href="index.html" class="nav-link order-now-nav">Order Now</a></li>
+        <li><a href="about.html" class="nav-link">About</a></li>
+        <li><a href="contact.html" class="nav-link active">Contact</a></li>
+      </ul>
+      <div class="hamburger">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Contact Header -->
+  <section class="contact-header">
+    <div class="container">
+      <h1>Contact Us</h1>
+      <p>We're here to help! Get in touch with us for any questions or support</p>
+    </div>
+  </section>
+
+  <!-- Wallet Notice Section -->
+  <section class="wallet-notice">
+    <div class="container">
+      <div class="notice-card">
+        <div class="notice-icon">
+          <i class="fas fa-wallet"></i>
+        </div>
+        <div class="notice-content">
+          <h3>💰 Need Help with Your Wallet?</h3>
+          <p>Having trouble loading money or placing orders? Our support team is here to help! Contact us via WhatsApp, Telegram, or phone for immediate assistance with your wallet and orders.</p>
+          <a href="index.html" class="btn btn-primary">
+            <i class="fas fa-arrow-right"></i>
+            Go to Wallet & Orders
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Information -->
+  <section class="contact-info">
+    <div class="container">
+      <div class="contact-grid">
+        <div class="contact-card">
+          <div class="contact-icon">
+            <i class="fas fa-phone"></i>
+          </div>
+          <h3>Phone</h3>
+          <p>+233 557 574 477</p>
+          <p>Available 24/7</p>
+        </div>
+        
+        <div class="contact-card">
+          <div class="contact-icon">
+            <i class="fab fa-whatsapp"></i>
+          </div>
+          <h3>WhatsApp</h3>
+          <p>+233 557 574 477</p>
+          <p>Instant messaging support</p>
+        </div>
+        
+        <div class="contact-card">
+          <div class="contact-icon">
+            <i class="fab fa-telegram"></i>
+          </div>
+          <h3>Telegram</h3>
+          <p>@DaikMedia</p>
+          <p>Fast and secure messaging</p>
+        </div>
+        
+        <div class="contact-card">
+          <div class="contact-icon">
+            <i class="fas fa-envelope"></i>
+          </div>
+          <h3>Email</h3>
+          <p>info@daikmedia.com</p>
+          <p>Business inquiries</p>
+        </div>
+        
+        <div class="contact-card">
+          <div class="contact-icon">
+            <i class="fas fa-map-marker-alt"></i>
+          </div>
+          <h3>Location</h3>
+          <p>Accra, Ghana</p>
+          <p>Headquarters</p>
+        </div>
+        
+        <div class="contact-card">
+          <div class="contact-icon">
+            <i class="fas fa-clock"></i>
+          </div>
+          <h3>Business Hours</h3>
+          <p>24/7 Support</p>
+          <p>Always available</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Form -->
+  <section class="contact-form-section">
+    <div class="container">
+      <div class="contact-form-container">
+        <div class="form-header">
+          <h2>Send Us a Message</h2>
+          <p>Fill out the form below and we'll get back to you as soon as possible</p>
+        </div>
+        
+        <form id="contactForm" class="contact-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="contactName">Full Name *</label>
+              <input type="text" id="contactName" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="contactEmail">Email Address *</label>
+              <input type="email" id="contactEmail" required>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="contactPhone">Phone Number</label>
+              <input type="tel" id="contactPhone">
+            </div>
+            
+            <div class="form-group">
+              <label for="contactSubject">Subject *</label>
+              <select id="contactSubject" required>
+                <option value="">Select a subject</option>
+                <option value="General Inquiry">General Inquiry</option>
+                <option value="Order Support">Order Support</option>
+                <option value="Technical Issue">Technical Issue</option>
+                <option value="Payment Issue">Payment Issue</option>
+                <option value="Partnership">Partnership</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="contactMessage">Message *</label>
+            <textarea id="contactMessage" rows="6" required placeholder="Please describe your inquiry or issue..."></textarea>
+          </div>
+          
+          <button type="submit" class="btn btn-primary">
+            <span class="btn-text">Send Message</span>
+            <span class="loading" style="display: none;"></span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="faq-section">
+    <div class="container">
+      <h2>Frequently Asked Questions</h2>
+      <div class="faq-grid">
+        <div class="faq-item">
+          <div class="faq-question">
+            <h3>How long does it take to receive my data bundle?</h3>
+            <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            <p>We deliver data bundles within 2-5 minutes of payment confirmation. In rare cases, it may take up to 10 minutes during peak hours.</p>
+          </div>
+        </div>
+        
+        <div class="faq-item">
+          <div class="faq-question">
+            <h3>What payment methods do you accept?</h3>
+            <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            <p>We accept Mobile Money (MoMo), Bank Transfer, and CashApp payments. All transactions are secure and encrypted.</p>
+          </div>
+        </div>
+        
+        <div class="faq-item">
+          <div class="faq-question">
+            <h3>Do you provide data for all networks?</h3>
+            <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            <p>Yes, we provide data bundles for MTN, Vodafone, and AirtelTigo networks in Ghana.</p>
+          </div>
+        </div>
+        
+        <div class="faq-item">
+          <div class="faq-question">
+            <h3>What if I don't receive my data bundle?</h3>
+            <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            <p>If you don't receive your data bundle within 10 minutes, please contact our support team immediately. We'll investigate and resolve the issue or provide a refund.</p>
+          </div>
+        </div>
+        
+        <div class="faq-item">
+          <div class="faq-question">
+            <h3>Are your prices competitive?</h3>
+            <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            <p>Yes, we offer the most competitive prices in the market with no hidden charges or extra fees.</p>
+          </div>
+        </div>
+        
+        <div class="faq-item">
+          <div class="faq-question">
+            <h3>How can I track my order?</h3>
+            <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            <p>You'll receive a confirmation message via WhatsApp or Telegram once your order is processed and delivered.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Social Media -->
+  <section class="social-media">
+    <div class="container">
+      <h2>Connect With Us</h2>
+      <p>Follow us on social media for updates, promotions, and customer support</p>
+      
+      <div class="social-grid">
+        <a href="#" class="social-card whatsapp">
+          <i class="fab fa-whatsapp"></i>
+          <h3>WhatsApp</h3>
+          <p>Instant messaging support</p>
+        </a>
+        
+        <a href="#" class="social-card telegram">
+          <i class="fab fa-telegram"></i>
+          <h3>Telegram</h3>
+          <p>Fast and secure messaging</p>
+        </a>
+        
+        <a href="#" class="social-card facebook">
+          <i class="fab fa-facebook"></i>
+          <h3>Facebook</h3>
+          <p>Updates and community</p>
+        </a>
+        
+        <a href="#" class="social-card instagram">
+          <i class="fab fa-instagram"></i>
+          <h3>Instagram</h3>
+          <p>Visual updates and stories</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>Daik Media</h3>
+          <p>Your trusted partner for fast and reliable data services in Ghana.</p>
+          <div class="social-links">
+            <a href="#"><i class="fab fa-whatsapp"></i></a>
+            <a href="#"><i class="fab fa-telegram"></i></a>
+            <a href="#"><i class="fab fa-facebook"></i></a>
+          </div>
+        </div>
+        <div class="footer-section">
+          <h4>Services</h4>
+          <ul>
+            <li><a href="services.html#mtn">MTN Data</a></li>
+            <li><a href="services.html#vodafone">Vodafone Data</a></li>
+            <li><a href="services.html#airteltigo">AirtelTigo Data</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Support</h4>
+          <ul>
+            <li><a href="contact.html">Contact Us</a></li>
+            <li><a href="#">FAQ</a></li>
+            <li><a href="#">Help Center</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Contact Info</h4>
+          <p><i class="fas fa-phone"></i> +233 557 574 477</p>
+          <p><i class="fas fa-envelope"></i> info@daikmedia.com</p>
+          <p><i class="fas fa-map-marker-alt"></i> Accra, Ghana</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Daik Media. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html> 

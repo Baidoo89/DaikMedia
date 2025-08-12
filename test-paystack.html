@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paystack Integration Test - Daik Media</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background: rgba(46, 204, 113, 0.3); }
+        .error { background: rgba(231, 76, 60, 0.3); }
+        .info { background: rgba(52, 152, 219, 0.3); }
+        input {
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            width: 200px;
+        }
+        .config-note {
+            background: rgba(255, 193, 7, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Paystack Integration Test</h1>
+        <p>Test your Paystack integration before hosting</p>
+        
+        <div class="config-note">
+            <h3>⚠️ Important: Update Your API Keys</h3>
+            <p>Before testing, update the <code>PAYSTACK_PUBLIC_KEY</code> in <code>config.js</code> with your actual Paystack public key.</p>
+        </div>
+
+        <div class="test-section">
+            <h3>🔑 Configuration Test</h3>
+            <button class="btn" onclick="testConfig()">Test Configuration</button>
+            <div id="configStatus"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>💳 Card Payment Test</h3>
+            <input type="number" id="testAmount" placeholder="Amount (GH₵)" value="5" min="5" step="0.01">
+            <button class="btn" onclick="testCardPayment()">Test Card Payment</button>
+            <div id="cardStatus"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📱 Mobile Money Test</h3>
+            <input type="number" id="testMomoAmount" placeholder="Amount (GH₵)" value="5" min="5" step="0.01">
+            <button class="btn" onclick="testMobileMoney()">Test Mobile Money</button>
+            <div id="momoStatus"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🏦 Bank Transfer Test</h3>
+            <input type="number" id="testBankAmount" placeholder="Amount (GH₵)" value="10" min="10" step="0.01">
+            <button class="btn" onclick="testBankTransfer()">Test Bank Transfer</button>
+            <div id="bankStatus"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Test Results</h3>
+            <div id="testResults"></div>
+        </div>
+    </div>
+
+    <!-- Configuration -->
+    <script src="config.js"></script>
+    <!-- Paystack SDK -->
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    
+    <script>
+        let testResults = [];
+
+        function testConfig() {
+            const statusDiv = document.getElementById('configStatus');
+            
+            try {
+                if (typeof CONFIG !== 'undefined' && CONFIG.PAYSTACK) {
+                    if (CONFIG.PAYSTACK.PUBLIC_KEY && CONFIG.PAYSTACK.PUBLIC_KEY !== 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx') {
+                        statusDiv.innerHTML = '<div class="status success">✅ Configuration loaded successfully!</div>';
+                        addTestResult('Configuration', 'PASS', 'All config values are properly set');
+                    } else {
+                        statusDiv.innerHTML = '<div class="status error">❌ Please update your Paystack API keys in config.js</div>';
+                        addTestResult('Configuration', 'FAIL', 'API keys not updated');
+                    }
+                } else {
+                    statusDiv.innerHTML = '<div class="status error">❌ Configuration file not loaded</div>';
+                    addTestResult('Configuration', 'FAIL', 'Config file not found');
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status error">❌ Configuration error: ' + error.message + '</div>';
+                addTestResult('Configuration', 'ERROR', error.message);
+            }
+        }
+
+        function testCardPayment() {
+            const amount = parseFloat(document.getElementById('testAmount').value);
+            const statusDiv = document.getElementById('cardStatus');
+            
+            if (!amount || amount < 5) {
+                statusDiv.innerHTML = '<div class="status error">❌ Please enter a valid amount (minimum GH₵5)</div>';
+                return;
+            }
+
+            try {
+                const handler = PaystackPop.setup({
+                    key: CONFIG.PAYSTACK.PUBLIC_KEY,
+                    email: 'test@daikmedia.com',
+                    amount: Math.round(amount * 100),
+                    currency: 'GHS',
+                    callback: function(response) {
+                        statusDiv.innerHTML = '<div class="status success">✅ Card payment successful! Reference: ' + response.reference + '</div>';
+                        addTestResult('Card Payment', 'PASS', 'Payment processed successfully');
+                    },
+                    onClose: function() {
+                        statusDiv.innerHTML = '<div class="status info">ℹ️ Payment was cancelled</div>';
+                        addTestResult('Card Payment', 'CANCELLED', 'User cancelled payment');
+                    }
+                });
+                
+                handler.openIframe();
+                statusDiv.innerHTML = '<div class="status info">ℹ️ Opening payment form...</div>';
+                
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status error">❌ Error: ' + error.message + '</div>';
+                addTestResult('Card Payment', 'ERROR', error.message);
+            }
+        }
+
+        function testMobileMoney() {
+            const amount = parseFloat(document.getElementById('testMomoAmount').value);
+            const statusDiv = document.getElementById('momoStatus');
+            
+            if (!amount || amount < 5) {
+                statusDiv.innerHTML = '<div class="status error">❌ Please enter a valid amount (minimum GH₵5)</div>';
+                return;
+            }
+
+            try {
+                const handler = PaystackPop.setup({
+                    key: CONFIG.PAYSTACK.PUBLIC_KEY,
+                    email: 'test@daikmedia.com',
+                    amount: Math.round(amount * 100),
+                    currency: 'GHS',
+                    channels: ['mobile_money'],
+                    callback: function(response) {
+                        statusDiv.innerHTML = '<div class="status success">✅ Mobile money payment successful! Reference: ' + response.reference + '</div>';
+                        addTestResult('Mobile Money', 'PASS', 'Payment processed successfully');
+                    },
+                    onClose: function() {
+                        statusDiv.innerHTML = '<div class="status info">ℹ️ Payment was cancelled</div>';
+                        addTestResult('Mobile Money', 'CANCELLED', 'User cancelled payment');
+                    }
+                });
+                
+                handler.openIframe();
+                statusDiv.innerHTML = '<div class="status info">ℹ️ Opening mobile money payment form...</div>';
+                
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status error">❌ Error: ' + error.message + '</div>';
+                addTestResult('Mobile Money', 'ERROR', error.message);
+            }
+        }
+
+        function testBankTransfer() {
+            const amount = parseFloat(document.getElementById('testBankAmount').value);
+            const statusDiv = document.getElementById('bankStatus');
+            
+            if (!amount || amount < 10) {
+                statusDiv.innerHTML = '<div class="status error">❌ Please enter a valid amount (minimum GH₵10)</div>';
+                return;
+            }
+
+            try {
+                const handler = PaystackPop.setup({
+                    key: CONFIG.PAYSTACK.PUBLIC_KEY,
+                    email: 'test@daikmedia.com',
+                    amount: Math.round(amount * 100),
+                    currency: 'GHS',
+                    channels: ['bank'],
+                    callback: function(response) {
+                        statusDiv.innerHTML = '<div class="status success">✅ Bank transfer initiated! Reference: ' + response.reference + '</div>';
+                        addTestResult('Bank Transfer', 'PASS', 'Transfer initiated successfully');
+                    },
+                    onClose: function() {
+                        statusDiv.innerHTML = '<div class="status info">ℹ️ Transfer was cancelled</div>';
+                        addTestResult('Bank Transfer', 'CANCELLED', 'User cancelled transfer');
+                    }
+                });
+                
+                handler.openIframe();
+                statusDiv.innerHTML = '<div class="status info">ℹ️ Opening bank transfer form...</div>';
+                
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status error">❌ Error: ' + error.message + '</div>';
+                addTestResult('Bank Transfer', 'ERROR', error.message);
+            }
+        }
+
+        function addTestResult(test, status, message) {
+            const timestamp = new Date().toLocaleTimeString();
+            testResults.push({ test, status, message, timestamp });
+            updateTestResults();
+        }
+
+        function updateTestResults() {
+            const resultsDiv = document.getElementById('testResults');
+            let html = '<h4>Test Summary:</h4>';
+            
+            testResults.forEach(result => {
+                const statusIcon = result.status === 'PASS' ? '✅' : 
+                                 result.status === 'FAIL' ? '❌' : 
+                                 result.status === 'ERROR' ? '🚨' : 'ℹ️';
+                
+                html += `<div class="status ${result.status.toLowerCase()}">
+                    ${statusIcon} ${result.test} - ${result.status} (${result.timestamp})
+                    <br><small>${result.message}</small>
+                </div>`;
+            });
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        // Auto-test configuration on page load
+        window.addEventListener('load', function() {
+            setTimeout(testConfig, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Dashboard - DAIK MEDIA </title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-logo">
+        <a href="homepage.html">
+          <i class="fas fa-wifi"></i>
+          <span>DAIK MEDIA</span>
+        </a>
+      </div>
+      <ul class="nav-menu">
+        <li><a href="homepage.html" class="nav-link">Home</a></li>
+        <li><a href="services.html" class="nav-link">Services</a></li>
+        <li><a href="dashboard.html" class="nav-link active">Dashboard</a></li>
+        <li><a href="about.html" class="nav-link">About</a></li>
+        <li><a href="contact.html" class="nav-link">Contact</a></li>
+      </ul>
+      <div class="hamburger">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Dashboard Header -->
+  <section class="dashboard-header">
+    <div class="container">
+      <h1>Order Dashboard</h1>
+      <p>Select your preferred network and data package to get started</p>
+    </div>
+  </section>
+
+  <!-- Network Selection -->
+  <section class="network-selection">
+    <div class="container">
+      <div class="network-cards">
+        <div class="network-card" data-network="mtn">
+          <div class="network-icon">
+            <i class="fas fa-signal"></i>
+          </div>
+          <h3>MTN</h3>
+          <p>Fast & Reliable</p>
+          <div class="network-status">
+            <span class="status-dot active"></span>
+            Available
+          </div>
+        </div>
+        
+        <div class="network-card" data-network="vodafone">
+          <div class="network-icon">
+            <i class="fas fa-mobile-alt"></i>
+          </div>
+          <h3>Vodafone</h3>
+          <p>High Speed</p>
+          <div class="network-status">
+            <span class="status-dot active"></span>
+            Available
+          </div>
+        </div>
+        
+        <div class="network-card" data-network="airteltigo">
+          <div class="network-icon">
+            <i class="fas fa-wifi"></i>
+          </div>
+          <h3>AirtelTigo</h3>
+          <p>Affordable</p>
+          <div class="network-status">
+            <span class="status-dot active"></span>
+            Available
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Order Form Section -->
+  <section class="order-section">
+    <div class="container">
+      <div class="order-container">
+        <!-- Package Display -->
+        <div class="package-display">
+          <h2>Available Packages</h2>
+          <div class="package-list" id="packageList">
+            <!-- Packages will be loaded here based on network selection -->
+          </div>
+        </div>
+
+        <!-- Order Form -->
+        <div class="order-form-container">
+          <div class="form-header">
+            <h2>Place Your Order</h2>
+            <p>Fill in your details to complete your order</p>
+          </div>
+          
+          <form id="orderForm" class="order-form">
+            <div class="form-group">
+              <label for="name">👤 Full Name</label>
+              <input type="text" id="name" required placeholder="Enter your full name">
+            </div>
+
+            <div class="form-group">
+              <label for="number">📞 Phone Number</label>
+              <input type="tel" id="number" required placeholder="e.g., 233244123456">
+            </div>
+
+            <div class="form-group">
+              <label for="bundle">📦 Data Bundle</label>
+              <select id="bundle" required>
+                <option value="">-- Select your preferred bundle --</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="payment">💳 Payment Method</label>
+              <select id="payment" required>
+                <option value="">-- Choose payment method --</option>
+                <option value="MoMo">MoMo</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="CashApp">CashApp</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="notes">📝 Additional Notes (Optional)</label>
+              <textarea id="notes" placeholder="Any special instructions or requests..."></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn">
+              <span class="btn-text">🚀 Submit Order</span>
+              <span class="loading" style="display: none;"></span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Stats -->
+  <section class="quick-stats">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-content">
+            <h3>10,000+</h3>
+            <p>Happy Customers</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="stat-content">
+            <h3>10-30 Min</h3>
+            <p>Delivery Time</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-star"></i>
+          </div>
+          <div class="stat-content">
+            <h3>4.9/5</h3>
+            <p>Customer Rating</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-headset"></i>
+          </div>
+          <div class="stat-content">
+            <h3>24/7</h3>
+            <p>Support Available</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>DAIK MEDIA</h3>
+          <p>Your trusted partner for fast and reliable data services in Ghana.</p>
+          <div class="social-links">
+            <a href="#"><i class="fab fa-whatsapp"></i></a>
+            <a href="#"><i class="fab fa-telegram"></i></a>
+            <a href="#"><i class="fab fa-facebook"></i></a>
+          </div>
+        </div>
+        <div class="footer-section">
+          <h4>Services</h4>
+          <ul>
+            <li><a href="services.html#mtn">MTN Data</a></li>
+            <li><a href="services.html#vodafone">Vodafone Data</a></li>
+            <li><a href="services.html#airteltigo">AirtelTigo Data</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Support</h4>
+          <ul>
+            <li><a href="contact.html">Contact Us</a></li>
+            <li><a href="#">FAQ</a></li>
+            <li><a href="#">Help Center</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Contact Info</h4>
+          <p><i class="fas fa-phone"></i> +233 557 574 477</p>
+          <p><i class="fas fa-envelope"></i> info@daikmedia.com</p>
+          <p><i class="fas fa-map-marker-alt"></i> Accra, Ghana</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 Daik Media. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html> 
