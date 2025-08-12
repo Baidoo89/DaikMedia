@@ -12,9 +12,9 @@ const CONFIG = {
   
   // Company Information
   COMPANY: {
-    NAME: 'Daik Media',
-    EMAIL: 'info@daikmedia.com',
-    PHONE: '+233 557 574 477',
+    NAME: 'Desmond Amponsah',
+    EMAIL: 'sendtonnimdee@gmail.com',
+    PHONE: '+233 531 257 913',
     WEBSITE: 'https://daikmedia.com'
   },
   
@@ -36,4 +36,5 @@ if (typeof module !== 'undefined' && module.exports) {
 } else {
   window.CONFIG = CONFIG;
 }
+
 
