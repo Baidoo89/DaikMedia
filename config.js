@@ -4,8 +4,8 @@
 const CONFIG = {
   // Paystack Configuration
   PAYSTACK: {
-    PUBLIC_KEY: 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', // Replace with your actual Paystack public key
-    SECRET_KEY: 'sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', // Replace with your actual Paystack secret key
+    PUBLIC_KEY: 'pk_live_e6b3d2f2d1e0efa6c8d8675c6c555cb0576b2e33', // Replace with your actual Paystack public key
+    SECRET_KEY: 'sk_live_3b8edbaf7e6a64510665870a9b7fcb8ec2521d93', // Replace with your actual Paystack secret key
     CURRENCY: 'GHS',
     COUNTRY: 'GH'
   },
@@ -36,3 +36,4 @@ if (typeof module !== 'undefined' && module.exports) {
 } else {
   window.CONFIG = CONFIG;
 }
+
