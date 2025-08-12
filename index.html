@@ -1,439 +1,222 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DAIK MEDIA - Wallet & Data Orders</title>
-  <link rel="stylesheet" href="styles.css">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daik Media - Data Packages & Mobile Solutions</title>
+    <meta name="description" content="Get the best data packages for MTN, Vodafone, and AirtelTigo. Fast, reliable, and affordable mobile data solutions in Ghana.">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-  <div class="container">
-    <!-- Header -->
-    <div class="header">
-      <h1>📱 DAIK MEDIA</h1>
-      <p>Fast, reliable data bundles with secure wallet payments</p>
-    </div>
-
-    <!-- Wallet Section -->
-    <div class="wallet-section">
-      <div class="wallet-card">
-        <div class="wallet-card-header">
-          <div class="wallet-icon">
-            <i class="fas fa-wallet"></i>
-          </div>
-          <div class="wallet-info">
-            <h2>Digital Wallet</h2>
-            <p>Manage your balance and transactions</p>
-          </div>
-        </div>
-        
-        <div class="balance-display">
-          <div class="balance-circle">
-            <div class="balance-amount" id="walletBalance">GH₵0.00</div>
-            <div class="balance-label">Available Balance</div>
-          </div>
-        </div>
-        
-        <div class="wallet-stats">
-          <div class="stat-item">
-            <div class="stat-icon">
-              <i class="fas fa-arrow-up"></i>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h2>Daik Media</h2>
             </div>
-            <div class="stat-info">
-              <span class="stat-value" id="totalLoaded">GH₵0.00</span>
-              <span class="stat-label">Total Loaded</span>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link active">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="services.html" class="nav-link">Services</a>
+                </li>
+                <li class="nav-item">
+                    <a href="about.html" class="nav-link">About</a>
+                </li>
+                <li class="nav-item">
+                    <a href="contact.html" class="nav-link">Contact</a>
+                </li>
+                <li class="nav-item">
+                    <a href="wallet.html" class="nav-link order-now-nav">Order Now</a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
             </div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-icon">
-              <i class="fas fa-arrow-down"></i>
-            </div>
-            <div class="stat-info">
-              <span class="stat-value" id="totalSpent">GH₵0.00</span>
-              <span class="stat-label">Total Spent</span>
-            </div>
-          </div>
         </div>
-        
-        <div class="wallet-actions">
-          <button class="action-btn primary" onclick="openLoadMoneyModal()">
-            <div class="btn-icon">
-              <i class="fas fa-plus"></i>
-            </div>
-            <span>Load Money</span>
-          </button>
-          <button class="action-btn secondary" onclick="openTransactionHistory()">
-            <div class="btn-icon">
-              <i class="fas fa-history"></i>
-            </div>
-            <span>History</span>
-          </button>
-        </div>
-      </div>
-    </div>
+    </nav>
 
-    <!-- Order Form -->
-    <div class="order-section">
-      <div class="order-header">
-        <h2>📦 Place Your Order</h2>
-        <div class="payment-notice">
-          <div class="notice-icon">
-            <i class="fas fa-credit-card"></i>
-          </div>
-          <div class="notice-content">
-            <h4>Payment Required</h4>
-            <p>You must load money to your wallet before placing orders. Select a bundle to see the required amount.</p>
-          </div>
-        </div>
-      </div>
-      <form id="orderForm">
-        <div class="form-group">
-          <label for="name">👤 Full Name</label>
-          <input type="text" id="name" required placeholder="Enter your full name">
-        </div>
-
-        <div class="form-group">
-          <label for="number">📞 Phone Number</label>
-          <input type="tel" id="number" required placeholder="e.g., 233244123456">
-        </div>
-
-        <div class="form-group">
-          <label for="network">🌐 Network</label>
-          <select id="network" required onchange="updateBundles()">
-            <option value="">-- Select Network --</option>
-            <option value="MTN">MTN</option>
-            <option value="Vodafone">Vodafone</option>
-            <option value="AirtelTigo">AirtelTigo</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="bundle">📦 Data Bundle</label>
-          <select id="bundle" required>
-            <option value="">-- Select Network First --</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="notes">📝 Additional Notes (Optional)</label>
-          <textarea id="notes" placeholder="Any special instructions or requests..."></textarea>
-        </div>
-
-        <div class="order-summary" id="orderSummary" style="display: none;">
-          <h3>Order Summary</h3>
-          <div class="summary-item">
-            <span>Bundle Cost:</span>
-            <span id="bundleCost">GH₵0.00</span>
-          </div>
-          <div class="summary-item">
-            <span>Wallet Balance:</span>
-            <span id="summaryBalance">GH₵0.00</span>
-          </div>
-          <div class="summary-item total">
-            <span>Remaining Balance:</span>
-            <span id="remainingBalance">GH₵0.00</span>
-          </div>
-        </div>
-
-        <button type="submit" class="submit-btn" id="submitBtn" disabled>
-          <span class="btn-text">🚀 Place Order</span>
-          <span class="loading" style="display: none;"></span>
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Load Money Modal -->
-  <div id="loadMoneyModal" class="modal">
-    <div class="modal-content payment-modal">
-      <div class="modal-header">
-        <h2><i class="fas fa-credit-card"></i> Load Money to Wallet</h2>
-        <span class="close" onclick="closeLoadMoneyModal()">&times;</span>
-      </div>
-      
-      <div class="payment-options">
-        <div class="payment-tabs">
-          <button class="tab-btn active" data-tab="momo">
-            <i class="fas fa-mobile-alt"></i>
-            <span>MoMo</span>
-          </button>
-          <button class="tab-btn" data-tab="bank">
-            <i class="fas fa-university"></i>
-            <span>Bank</span>
-          </button>
-          <button class="tab-btn" data-tab="cashapp">
-            <i class="fas fa-dollar-sign"></i>
-            <span>CashApp</span>
-          </button>
-          <button class="tab-btn" data-tab="card">
-            <i class="fas fa-credit-card"></i>
-            <span>Card</span>
-          </button>
-        </div>
-
-        <!-- MoMo Payment -->
-        <div class="payment-content active" id="momo">
-          <div class="payment-card">
-            <div class="payment-header">
-              <div class="payment-icon momo">
-                <i class="fas fa-mobile-alt"></i>
-              </div>
-              <div class="payment-info">
-                <h3>Mobile Money</h3>
-                <p>Send money to our MoMo number and we'll credit your wallet instantly</p>
-              </div>
-            </div>
-            
-            <div class="payment-details">
-              <div class="detail-row">
-                <div class="detail-item">
-                  <span class="detail-label">MoMo Number:</span>
-                  <span class="detail-value highlight">+233 557 574 477</span>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">Fast & Reliable Data Packages</h1>
+                <p class="hero-subtitle">Get the best deals on MTN, Vodafone, and AirtelTigo data packages. Instant activation, 24/7 support.</p>
+                <div class="hero-buttons">
+                    <a href="wallet.html" class="btn btn-primary btn-large">Order Data Now</a>
+                    <a href="services.html" class="btn btn-secondary btn-large">View Packages</a>
                 </div>
-                <button class="copy-btn" onclick="copyToClipboard('+233 557 574 477')">
-                  <i class="fas fa-copy"></i>
-                </button>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Account Name:</span>
-                <span class="detail-value">Daik Media</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Reference:</span>
-                <span class="detail-value highlight">Your Phone Number</span>
-              </div>
             </div>
-            
-            <div class="amount-section">
-              <label for="momoAmount">Amount to Load (GH₵)</label>
-              <div class="amount-input-group">
-                <span class="currency-symbol">GH₵</span>
-                <input type="number" id="momoAmount" min="5" step="0.01" placeholder="0.00">
-              </div>
+            <div class="hero-image">
+                <div class="hero-card">
+                    <div class="network-icons">
+                        <div class="network-icon mtn">
+                            <i class="fas fa-signal"></i>
+                            <span>MTN</span>
+                        </div>
+                        <div class="network-icon vodafone">
+                            <i class="fas fa-wifi"></i>
+                            <span>Vodafone</span>
+                        </div>
+                        <div class="network-icon airteltigo">
+                            <i class="fas fa-broadcast-tower"></i>
+                            <span>AirtelTigo</span>
+                        </div>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="stat">
+                            <span class="stat-number">500+</span>
+                            <span class="stat-label">Happy Customers</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">24/7</span>
+                            <span class="stat-label">Support</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">Instant</span>
+                            <span class="stat-label">Activation</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
-            <button class="payment-btn primary" onclick="processMoMoPayment()">
-              <i class="fas fa-check"></i>
-              <span>Confirm Payment</span>
-            </button>
-          </div>
         </div>
+    </section>
 
-        <!-- Bank Transfer -->
-        <div class="payment-content" id="bank">
-          <div class="payment-card">
-            <div class="payment-header">
-              <div class="payment-icon bank">
-                <i class="fas fa-university"></i>
-              </div>
-              <div class="payment-info">
-                <h3>Bank Transfer</h3>
-                <p>Transfer to our bank account and we'll credit your wallet within 30 minutes</p>
-              </div>
-            </div>
-            
-            <div class="payment-details">
-              <div class="detail-row">
-                <div class="detail-item">
-                  <span class="detail-label">Bank Name:</span>
-                  <span class="detail-value">Ghana Commercial Bank</span>
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">Why Choose Daik Media?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3>Instant Activation</h3>
+                    <p>Get your data activated within minutes of payment confirmation.</p>
                 </div>
-              </div>
-              <div class="detail-row">
-                <div class="detail-item">
-                  <span class="detail-label">Account Number:</span>
-                  <span class="detail-value highlight">1234567890</span>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Secure Payments</h3>
+                    <p>Multiple payment options including Mobile Money, Bank Transfer, and Cards.</p>
                 </div>
-                <button class="copy-btn" onclick="copyToClipboard('1234567890')">
-                  <i class="fas fa-copy"></i>
-                </button>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Account Name:</span>
-                <span class="detail-value">Daik Media Ltd</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Reference:</span>
-                <span class="detail-value highlight">Your Phone Number</span>
-              </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <h3>24/7 Support</h3>
+                    <p>Round-the-clock customer support via WhatsApp and Telegram.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-tags"></i>
+                    </div>
+                    <h3>Best Prices</h3>
+                    <p>Competitive prices with regular promotions and bundle deals.</p>
+                </div>
             </div>
-            
-            <div class="amount-section">
-              <label for="bankAmount">Amount to Load (GH₵)</label>
-              <div class="amount-input-group">
-                <span class="currency-symbol">GH₵</span>
-                <input type="number" id="bankAmount" min="10" step="0.01" placeholder="0.00">
-              </div>
-            </div>
-            
-            <button class="payment-btn primary" onclick="processBankPayment()">
-              <i class="fas fa-check"></i>
-              <span>Confirm Payment</span>
-            </button>
-          </div>
         </div>
+    </section>
 
-        <!-- CashApp -->
-        <div class="payment-content" id="cashapp">
-          <div class="payment-card">
-            <div class="payment-header">
-              <div class="payment-icon cashapp">
-                <i class="fas fa-dollar-sign"></i>
-              </div>
-              <div class="payment-info">
-                <h3>CashApp</h3>
-                <p>Send money via CashApp and we'll credit your wallet instantly</p>
-              </div>
-            </div>
-            
-            <div class="payment-details">
-              <div class="detail-row">
-                <div class="detail-item">
-                  <span class="detail-label">CashApp ID:</span>
-                  <span class="detail-value highlight">$DaikMedia</span>
+    <!-- Popular Packages Section -->
+    <section class="popular-packages">
+        <div class="container">
+            <h2 class="section-title">Popular Data Packages</h2>
+            <div class="packages-grid">
+                <div class="package-card">
+                    <div class="package-header mtn">
+                        <h3>MTN 5GB</h3>
+                        <span class="package-price">₵25</span>
+                    </div>
+                    <div class="package-features">
+                        <p><i class="fas fa-check"></i> 5GB Data</p>
+                        <p><i class="fas fa-check"></i> 30 Days Validity</p>
+                        <p><i class="fas fa-check"></i> 4G/3G Network</p>
+                    </div>
+                    <a href="wallet.html?bundle=5GB&price=25&network=MTN" class="btn btn-primary">Order Now</a>
                 </div>
-                <button class="copy-btn" onclick="copyToClipboard('$DaikMedia')">
-                  <i class="fas fa-copy"></i>
-                </button>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Reference:</span>
-                <span class="detail-value highlight">Your Phone Number</span>
-              </div>
+                <div class="package-card">
+                    <div class="package-header vodafone">
+                        <h3>Vodafone 10GB</h3>
+                        <span class="package-price">₵45</span>
+                    </div>
+                    <div class="package-features">
+                        <p><i class="fas fa-check"></i> 10GB Data</p>
+                        <p><i class="fas fa-check"></i> 30 Days Validity</p>
+                        <p><i class="fas fa-check"></i> 4G/3G Network</p>
+                    </div>
+                    <a href="wallet.html?bundle=10GB&price=45&network=Vodafone" class="btn btn-primary">Order Now</a>
+                </div>
+                <div class="package-card">
+                    <div class="package-header airteltigo">
+                        <h3>AirtelTigo 15GB</h3>
+                        <span class="package-price">₵60</span>
+                    </div>
+                    <div class="package-features">
+                        <p><i class="fas fa-check"></i> 15GB Data</p>
+                        <p><i class="fas fa-check"></i> 30 Days Validity</p>
+                        <p><i class="fas fa-check"></i> 4G/3G Network</p>
+                    </div>
+                    <a href="wallet.html?bundle=15GB&price=60&network=AirtelTigo" class="btn btn-primary">Order Now</a>
+                </div>
             </div>
-            
-            <div class="amount-section">
-              <label for="cashappAmount">Amount to Load (GH₵)</label>
-              <div class="amount-input-group">
-                <span class="currency-symbol">GH₵</span>
-                <input type="number" id="cashappAmount" min="5" step="0.01" placeholder="0.00">
-              </div>
+            <div class="text-center">
+                <a href="services.html" class="btn btn-secondary">View All Packages</a>
             </div>
-            
-            <button class="payment-btn primary" onclick="processCashAppPayment()">
-              <i class="fas fa-check"></i>
-              <span>Confirm Payment</span>
-            </button>
-          </div>
         </div>
+    </section>
 
-        <!-- Card Payment -->
-        <div class="payment-content" id="card">
-          <div class="payment-card">
-            <div class="payment-header">
-              <div class="payment-icon card">
-                <i class="fas fa-credit-card"></i>
-              </div>
-              <div class="payment-info">
-                <h3>Card Payment</h3>
-                <p>Pay securely with your debit or credit card</p>
-              </div>
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Ready to Get Started?</h2>
+                <p>Join thousands of satisfied customers who trust Daik Media for their data needs.</p>
+                <a href="wallet.html" class="btn btn-primary btn-large">Start Ordering Now</a>
             </div>
-            
-            <div class="card-form">
-              <div class="form-group">
-                <label for="cardNumber">Card Number</label>
-                <div class="card-input-group">
-                  <i class="fas fa-credit-card"></i>
-                  <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Daik Media</h3>
+                    <p>Your trusted partner for reliable data packages and mobile solutions in Ghana.</p>
+                    <div class="social-links">
+                        <a href="https://t.me/DaikMedia" target="_blank"><i class="fab fa-telegram"></i></a>
+                        <a href="https://wa.me/233557574477" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                    </div>
                 </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="expiry">Expiry Date</label>
-                  <input type="text" id="expiry" placeholder="MM/YY" maxlength="5">
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="services.html">Services</a></li>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
                 </div>
-                <div class="form-group">
-                  <label for="cvv">CVV</label>
-                  <input type="text" id="cvv" placeholder="123" maxlength="3">
+                <div class="footer-section">
+                    <h4>Contact Info</h4>
+                    <p><i class="fas fa-phone"></i> +233 557 574 477</p>
+                    <p><i class="fas fa-envelope"></i> info@daikmedia.com</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Accra, Ghana</p>
                 </div>
-              </div>
-              <div class="amount-section">
-                <label for="cardAmount">Amount to Load (GH₵)</label>
-                <div class="amount-input-group">
-                  <span class="currency-symbol">GH₵</span>
-                  <input type="number" id="cardAmount" min="5" step="0.01" placeholder="0.00">
-                </div>
-              </div>
-              <button class="payment-btn primary" onclick="processCardPayment()">
-                <i class="fas fa-lock"></i>
-                <span>Pay Securely</span>
-              </button>
             </div>
-          </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Daik Media. All rights reserved.</p>
+            </div>
         </div>
-      </div>
-    </div>
-  </div>
+    </footer>
 
-  <!-- Transaction History Modal -->
-  <div id="transactionModal" class="modal">
-    <div class="modal-content transaction-modal">
-      <div class="modal-header">
-        <h2><i class="fas fa-chart-line"></i> Transaction History</h2>
-        <span class="close" onclick="closeTransactionHistory()">&times;</span>
-      </div>
-      
-      <div class="transaction-summary">
-        <div class="summary-card">
-          <div class="summary-icon">
-            <i class="fas fa-arrow-up"></i>
-          </div>
-          <div class="summary-info">
-            <span class="summary-value" id="totalLoadedSummary">GH₵0.00</span>
-            <span class="summary-label">Total Loaded</span>
-          </div>
-        </div>
-        <div class="summary-card">
-          <div class="summary-icon">
-            <i class="fas fa-arrow-down"></i>
-          </div>
-          <div class="summary-info">
-            <span class="summary-value" id="totalSpentSummary">GH₵0.00</span>
-            <span class="summary-label">Total Spent</span>
-          </div>
-        </div>
-        <div class="summary-card">
-          <div class="summary-icon">
-            <i class="fas fa-wallet"></i>
-          </div>
-          <div class="summary-info">
-            <span class="summary-value" id="currentBalanceSummary">GH₵0.00</span>
-            <span class="summary-label">Current Balance</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="transaction-filters">
-        <button class="filter-btn active" data-filter="all">All</button>
-        <button class="filter-btn" data-filter="credit">Credits</button>
-        <button class="filter-btn" data-filter="debit">Debits</button>
-      </div>
-      
-      <div class="transaction-list" id="transactionList">
-        <!-- Transactions will be loaded here -->
-      </div>
-    </div>
-  </div>
-
-  <!-- Success Modal -->
-  <div id="successModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>✅ Success!</h2>
-        <span class="close" onclick="closeSuccessModal()">&times;</span>
-      </div>
-      <div class="success-content" id="successContent">
-        <!-- Success message will be displayed here -->
-      </div>
-    </div>
-  </div>
-
-  <!-- Configuration -->
-  <script src="config.js"></script>
-  <!-- Paystack SDK -->
-  <script src="https://js.paystack.co/v1/inline.js"></script>
-  <script src="wallet.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
