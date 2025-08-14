@@ -1,8 +1,8 @@
 // Wallet System JavaScript
 
-// Paystack Configuration
-const PAYSTACK_PUBLIC_KEY = CONFIG.PAYSTACK.PUBLIC_KEY;
-const PAYSTACK_SECRET_KEY = CONFIG.PAYSTACK.SECRET_KEY;
+// Paystack Configuration - Keys are now handled by Google Apps Script
+// const PAYSTACK_PUBLIC_KEY = CONFIG.PAYSTACK.PUBLIC_KEY; // REMOVED
+// const PAYSTACK_SECRET_KEY = CONFIG.PAYSTACK.SECRET_KEY; // REMOVED
 
 // Initialize wallet data
 let walletBalance = parseFloat(localStorage.getItem('walletBalance')) || 0;
@@ -11,52 +11,51 @@ let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
 // Data packages for different networks
 const packageData = {
   MTN: [
-    { name: "1GB", price: 6, validity: "30 Days" },
-    { name: "2GB", price: 11, validity: "30 Days" },
-    { name: "3GB", price: 16.50, validity: "30 Days" },
-    { name: "4GB", price: 21, validity: "30 Days" },
-    { name: "5GB", price: 27, validity: "30 Days" },
-    { name: "6GB", price: 33, validity: "30 Days" },
-    { name: "8GB", price: 42, validity: "30 Days" },
-    { name: "10GB", price: 50, validity: "30 Days" },
-    { name: "15GB", price: 70, validity: "30 Days" },
-    { name: "20GB", price: 90, validity: "30 Days" },
-    { name: "25GB", price: 115, validity: "30 Days" },
-    { name: "30GB", price: 135, validity: "30 Days" },
-    { name: "40GB", price: 178, validity: "30 Days" },
-    { name: "50GB", price: 210, validity: "30 Days" }
-  ],
-  Vodafone: [
     { name: "1GB", price: 5.50, validity: "30 Days" },
-    { name: "2GB", price: 10, validity: "30 Days" },
-    { name: "3GB", price: 15, validity: "30 Days" },
-    { name: "4GB", price: 19, validity: "30 Days" },
-    { name: "5GB", price: 24, validity: "30 Days" },
-    { name: "6GB", price: 29, validity: "30 Days" },
-    { name: "8GB", price: 38, validity: "30 Days" },
-    { name: "10GB", price: 45, validity: "30 Days" },
-    { name: "15GB", price: 65, validity: "30 Days" },
-    { name: "20GB", price: 85, validity: "30 Days" },
-    { name: "25GB", price: 105, validity: "30 Days" },
-    { name: "30GB", price: 125, validity: "30 Days" },
-    { name: "40GB", price: 165, validity: "30 Days" },
-    { name: "50GB", price: 200, validity: "30 Days" }
+    { name: "2GB", price: 10.50, validity: "30 Days" },
+    { name: "3GB", price: 15.50, validity: "30 Days" },
+    { name: "4GB", price: 20.00, validity: "30 Days" },
+    { name: "5GB", price: 27.00, validity: "30 Days" },
+    { name: "6GB", price: 34.00, validity: "30 Days" },
+    { name: "8GB", price: 40.00, validity: "30 Days" },
+    { name: "10GB", price: 46.00, validity: "30 Days" },
+    { name: "15GB", price: 66.00, validity: "30 Days" },
+    { name: "20GB", price: 88.00, validity: "30 Days" },
+    { name: "25GB", price: 112.00, validity: "30 Days" },
+    { name: "30GB", price: 139.00, validity: "30 Days" },
+    { name: "40GB", price: 165.00, validity: "30 Days" },
+    { name: "50GB", price: 208.00, validity: "30 Days" }
+  ],
+  Telecel: [
+    { name: "5GB", price: 27.00, validity: "30 Days" },
+    { name: "10GB", price: 52.00, validity: "30 Days" },
+    { name: "15GB", price: 72.00, validity: "30 Days" },
+    { name: "20GB", price: 89.00, validity: "30 Days" },
+    { name: "25GB", price: 107.00, validity: "30 Days" },
+    { name: "30GB", price: 130.00, validity: "30 Days" },
+    { name: "40GB", price: 175.00, validity: "30 Days" },
+    { name: "50GB", price: 228.00, validity: "30 Days" }
   ],
   AirtelTigo: [
-    { name: "1GB", price: 5, validity: "30 Days" },
-    { name: "2GB", price: 9, validity: "30 Days" },
-    { name: "3GB", price: 13.50, validity: "30 Days" },
-    { name: "4GB", price: 17, validity: "30 Days" },
-    { name: "5GB", price: 21, validity: "30 Days" },
-    { name: "6GB", price: 25, validity: "30 Days" },
-    { name: "8GB", price: 33, validity: "30 Days" },
-    { name: "10GB", price: 40, validity: "30 Days" },
-    { name: "15GB", price: 58, validity: "30 Days" },
-    { name: "20GB", price: 75, validity: "30 Days" },
-    { name: "25GB", price: 92, validity: "30 Days" },
-    { name: "30GB", price: 110, validity: "30 Days" },
-    { name: "40GB", price: 145, validity: "30 Days" },
-    { name: "50GB", price: 180, validity: "30 Days" }
+    { name: "1GB", price: 5.00, validity: "30 Days" },
+    { name: "2GB", price: 9.00, validity: "30 Days" },
+    { name: "3GB", price: 14.00, validity: "30 Days" },
+    { name: "4GB", price: 18.00, validity: "30 Days" },
+    { name: "5GB", price: 22.00, validity: "30 Days" },
+    { name: "6GB", price: 25.00, validity: "30 Days" },
+    { name: "7GB", price: 30.00, validity: "30 Days" },
+    { name: "8GB", price: 35.00, validity: "30 Days" },
+    { name: "9GB", price: 40.00, validity: "30 Days" },
+    { name: "10GB", price: 42.00, validity: "30 Days" },
+    { name: "11GB", price: 44.50, validity: "30 Days" },
+    { name: "12GB", price: 50.00, validity: "30 Days" },
+    { name: "15GB", price: 60.50, validity: "30 Days" },
+    { name: "20GB", price: 78.00, validity: "30 Days" },
+    { name: "25GB", price: 98.00, validity: "30 Days" },
+    { name: "30GB", price: 117.00, validity: "30 Days" },
+    { name: "40GB", price: 155.00, validity: "30 Days" },
+    { name: "50GB", price: 192.00, validity: "30 Days" },
+    { name: "100GB", price: 380.00, validity: "30 Days" }
   ]
 };
 
@@ -74,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
   handleURLParameters();
   
   // Check if there's already a bundle selected (e.g., from page refresh)
-  if (document.getElementById('bundle').value) {
+  if (document.getElementById('bundle')) {
     checkOrderEligibility();
   }
 });
@@ -225,8 +224,8 @@ function updateBundles() {
   
   // Clear previous bundles
   bundleSelect.innerHTML = '<option value="">-- Select Bundle --</option>';
-  orderSummary.style.display = 'none';
-  submitBtn.disabled = true;
+  if (orderSummary) orderSummary.style.display = 'none';
+  if (submitBtn) submitBtn.disabled = true;
   
   if (!network) return;
   
@@ -254,8 +253,8 @@ function checkOrderEligibility() {
   const submitBtn = document.getElementById('submitBtn');
   
   if (!bundle) {
-    orderSummary.style.display = 'none';
-    submitBtn.disabled = true;
+    if (orderSummary) orderSummary.style.display = 'none';
+    if (submitBtn) submitBtn.disabled = true;
     return;
   }
   
@@ -294,62 +293,75 @@ function checkOrderEligibility() {
     ` : ''}
   `;
   
-  orderSummary.innerHTML = orderSummaryHtml;
-  orderSummary.style.display = 'block';
+  if (orderSummary) {
+    orderSummary.innerHTML = orderSummaryHtml;
+    orderSummary.style.display = 'block';
+  }
   
   // Enable/disable submit button based on balance
-  if (walletBalance >= price) {
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = `
-      <span class="btn-text">🚀 Place Order</span>
-      <span class="loading" style="display: none;"></span>
-    `;
-  } else {
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = `
-      <span class="btn-text">💳 Load Money First</span>
-      <span class="loading" style="display: none;"></span>
-    `;
+  if (submitBtn) {
+    if (walletBalance >= price) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `
+        <span class="btn-text">🚀 Place Order</span>
+        <span class="loading" style="display: none;"></span>
+      `;
+    } else {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `
+        <span class="btn-text">💳 Load Money First</span>
+        <span class="loading" style="display: none;"></span>
+      `;
+    }
   }
 }
 
-// This function has been replaced by checkOrderEligibility()
-
 // Modal functions
 function openLoadMoneyModal() {
-  document.getElementById('loadMoneyModal').style.display = 'block';
+  const modal = document.getElementById('loadMoneyModal');
+  if (modal) modal.style.display = 'block';
 }
 
 function closeLoadMoneyModal() {
-  document.getElementById('loadMoneyModal').style.display = 'none';
+  const modal = document.getElementById('loadMoneyModal');
+  if (modal) modal.style.display = 'none';
 }
 
 function openTransactionHistory() {
-  document.getElementById('transactionModal').style.display = 'block';
-  loadTransactionHistory();
+  const modal = document.getElementById('transactionModal');
+  if (modal) {
+    modal.style.display = 'block';
+    loadTransactionHistory();
+  }
 }
 
 function closeTransactionHistory() {
-  document.getElementById('transactionModal').style.display = 'none';
+  const modal = document.getElementById('transactionModal');
+  if (modal) modal.style.display = 'none';
 }
 
 function showSuccessModal(title, message, isSuccess = true) {
   const successContent = document.getElementById('successContent');
-  const icon = isSuccess ? 'fas fa-check-circle' : 'fas fa-exclamation-triangle';
-  const color = isSuccess ? '#28a745' : '#dc3545';
+  const successModal = document.getElementById('successModal');
   
-  successContent.innerHTML = `
-    <i class="${icon}" style="color: ${color}"></i>
-    <h3>${title}</h3>
-    <p>${message}</p>
-    <button class="btn btn-primary" onclick="closeSuccessModal()">OK</button>
-  `;
-  
-  document.getElementById('successModal').style.display = 'block';
+  if (successContent && successModal) {
+    const icon = isSuccess ? 'fas fa-check-circle' : 'fas fa-exclamation-triangle';
+    const color = isSuccess ? '#28a745' : '#dc3545';
+    
+    successContent.innerHTML = `
+      <i class="${icon}" style="color: ${color}"></i>
+      <h3>${title}</h3>
+      <p>${message}</p>
+      <button class="btn btn-primary" onclick="closeSuccessModal()">OK</button>
+    `;
+    
+    successModal.style.display = 'block';
+  }
 }
 
 function closeSuccessModal() {
-  document.getElementById('successModal').style.display = 'none';
+  const modal = document.getElementById('successModal');
+  if (modal) modal.style.display = 'none';
 }
 
 // Payment processing functions
@@ -362,7 +374,7 @@ function processMoMoPayment() {
   
   // Initialize Paystack mobile money payment
   const handler = PaystackPop.setup({
-    key: PAYSTACK_PUBLIC_KEY,
+    key: 'pk_live_e6b3d2f2d1e0efa6c8d8675c6c555cb0576b2e33',
     email: 'customer@daikmedia.com', // You can make this dynamic
     amount: Math.round(amount * 100), // Paystack expects amount in kobo
     currency: 'GHS',
@@ -400,7 +412,7 @@ function processBankPayment() {
   
   // Initialize Paystack bank transfer payment
   const handler = PaystackPop.setup({
-    key: PAYSTACK_PUBLIC_KEY,
+    key: 'pk_live_e6b3d2f2d1e0efa6c8d8675c6c555cb0576b2e33',
     email: 'customer@daikmedia.com', // You can make this dynamic
     amount: Math.round(amount * 100), // Paystack expects amount in kobo
     currency: 'GHS',
@@ -455,7 +467,7 @@ function processCardPayment() {
   
   // Initialize Paystack payment
   const handler = PaystackPop.setup({
-    key: PAYSTACK_PUBLIC_KEY,
+    key: 'pk_live_e6b3d2f2d1e0efa6c8d8675c6c555cb0576b2e33',
     email: 'customer@daikmedia.com', // You can make this dynamic
     amount: Math.round(amount * 100), // Paystack expects amount in kobo (smallest currency unit)
     currency: 'GHS',
@@ -505,7 +517,7 @@ function addToWallet(amount, method) {
   updateWalletStats();
   
   // Check if user can now place orders
-  if (document.getElementById('bundle').value) {
+  if (document.getElementById('bundle')) {
     checkOrderEligibility();
   }
 }
@@ -535,7 +547,7 @@ function deductFromWallet(amount, description) {
   updateWalletStats();
   
   // Check if user can still place orders
-  if (document.getElementById('bundle').value) {
+  if (document.getElementById('bundle')) {
     checkOrderEligibility();
   }
   
@@ -659,7 +671,7 @@ function formatDate(dateString) {
 }
 
 // Handle order submission
-function handleOrderSubmission(e) {
+async function handleOrderSubmission(e) {
   e.preventDefault();
   
   const name = document.getElementById('name').value.trim();
@@ -707,9 +719,13 @@ function handleOrderSubmission(e) {
     return;
   }
   
+  // Generate Order ID and create order message
+  const orderID = await generateOrderID();
+  
   // Create order message
   const orderMessage = `🆕 NEW DATA ORDER RECEIVED! 📱
 
+🆔 Order ID: ${orderID}
 👤 Customer Name: ${name}
 📞 Phone Number: ${number}
 🌐 Network: ${network}
@@ -721,6 +737,7 @@ function handleOrderSubmission(e) {
   // Send Telegram notification
   const telegramMessage = `📦 *New Order Received*
 
+🆔 *Order ID: ${orderID}*
 👤 Name: ${name}
 📱 Number: ${number}
 🌐 Network: ${network}
@@ -732,18 +749,32 @@ function handleOrderSubmission(e) {
   sendTelegramNotification(telegramMessage);
   
   // Save to Google Sheets
-  saveToGoogleSheets(name, number, network, bundle, 'Wallet', notes)
+  saveToGoogleSheets(name, number, network, bundle, 'Wallet', notes, orderID)
     .then(() => {
       showSuccessModal(
-        'Order Placed Successfully!',
-        `Your ${bundle} order for ${network} has been placed and will be processed shortly. GH₵${price.toFixed(2)} has been deducted from your wallet.`,
+        'Order Placed Successfully! 🎉',
+        `Your ${bundle} order for ${network} has been placed and will be processed shortly.
+
+🆔 **Order ID: ${orderID}**
+💰 Amount: GH₵${price.toFixed(2)} (deducted from wallet)
+
+📱 **Save this Order ID for tracking your order status later!**
+
+You will receive updates via SMS/WhatsApp when your order is processed.`,
         true
       );
     })
     .catch(() => {
       showSuccessModal(
-        'Order Placed Successfully!',
-        `Your ${bundle} order for ${network} has been placed and will be processed shortly. GH₵${price.toFixed(2)} has been deducted from your wallet.`,
+        'Order Placed Successfully! 🎉',
+        `Your ${bundle} order for ${network} has been placed and will be processed shortly.
+
+🆔 **Order ID: ${orderID}**
+💰 Amount: GH₵${price.toFixed(2)} (deducted from wallet)
+
+📱 **Save this Order ID for tracking your order status later!**
+
+You will receive updates via SMS/WhatsApp when your order is processed.`,
         true
       );
     })
@@ -793,22 +824,102 @@ function sendTelegramNotification(message) {
   });
 }
 
+// Generate sequential Order ID
+async function generateOrderID() {
+  try {
+    const response = await fetch(CONFIG.GOOGLE_SHEETS.SCRIPT_URL + '?action=getNextOrderID', {
+      method: 'GET'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data.error) {
+      throw new Error(data.error);
+    }
+    
+    if (data.orderID) {
+      console.log('Generated Order ID:', data.orderID);
+      return data.orderID;
+    } else {
+      throw new Error('No Order ID received from server');
+    }
+    
+  } catch (error) {
+    console.error('Error generating Order ID:', error);
+    
+    // Enhanced fallback: generate timestamp-based ID with random suffix
+    const timestamp = Date.now();
+    const randomSuffix = Math.random().toString(36).substr(2, 5);
+    const fallbackID = `FALLBACK_${timestamp}_${randomSuffix}`;
+    
+    console.warn('Using fallback Order ID:', fallbackID);
+    
+    // Show warning to user
+    showSuccessModal(
+      '⚠️ Order ID Generation Warning',
+      `We're experiencing technical difficulties with our Order ID system. Your order will still be processed with a temporary ID: ${fallbackID}`,
+      false
+    );
+    
+    return fallbackID;
+  }
+}
+
 // Save to Google Sheets
-function saveToGoogleSheets(name, number, network, bundle, payment, notes) {
-  const scriptURL = "https://script.google.com/macros/s/AKfycbzuFDTosabmYvMFlZxSyvp-LmRR09eKFiEUDWA1WlEP5cCPgPoTh82vG4vmsjBb9RypeQ/exec";
-  
-  const formData = new FormData();
-  formData.append('name', name);
-  formData.append('number', number);
-  formData.append('network', network);
-  formData.append('bundle', bundle);
-  formData.append('payment', payment);
-  formData.append('notes', notes);
-  
-  return fetch(scriptURL, {
-    method: "POST",
-    body: formData,
-  });
+async function saveToGoogleSheets(name, number, network, bundle, payment, notes, orderID) {
+  try {
+    const scriptURL = CONFIG.GOOGLE_SHEETS.SCRIPT_URL;
+    
+    const formData = new FormData();
+    formData.append('action', 'saveOrder');
+    formData.append('orderID', orderID);
+    formData.append('name', name);
+    formData.append('number', number);
+    formData.append('network', network);
+    formData.append('bundle', bundle);
+    formData.append('payment', payment);
+    formData.append('notes', notes);
+    
+    console.log('Sending order data to Google Sheets:', {
+      orderID,
+      name,
+      number,
+      network,
+      bundle,
+      payment,
+      notes
+    });
+    
+    const response = await fetch(scriptURL, {
+      method: "POST",
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    if (result.error) {
+      throw new Error(result.error);
+    }
+    
+    if (result.success) {
+      console.log('Order saved to Google Sheets successfully:', result);
+      return result;
+    } else {
+      throw new Error('Failed to save order to Google Sheets');
+    }
+    
+  } catch (error) {
+    console.error('Error saving to Google Sheets:', error);
+    throw error; // Re-throw to be handled by caller
+  }
 }
 
 // Close modals when clicking outside
@@ -826,7 +937,7 @@ window.onclick = function(event) {
   if (event.target === successModal) {
     closeSuccessModal();
   }
-} 
+}
 
 // Copy to clipboard function
 function copyToClipboard(text) {
@@ -868,4 +979,6 @@ function handlePaystackError(error) {
 function getCustomerEmail() {
   // You can implement this to get email from user input or stored data
   return 'customer@daikmedia.com';
-} 
+}
+
+ 

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Google Apps Script - Daik Media</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Google Apps Script Test - Daik Media</h1>
+    
+    <div class="test-section">
+        <h2>1. Test Order ID Generation</h2>
+        <p>This will test if your Google Apps Script can generate sequential Order IDs.</p>
+        <button class="test-button" onclick="testOrderIDGeneration()">Test Order ID Generation</button>
+        <div id="orderIdResult" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Test Order Saving</h2>
+        <p>This will test if your Google Apps Script can save orders to Google Sheets.</p>
+        <button class="test-button" onclick="testOrderSaving()">Test Order Saving</button>
+        <div id="orderSaveResult" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Test Complete Flow</h2>
+        <p>This will test the complete order flow: generate ID + save order.</p>
+        <button class="test-button" onclick="testCompleteFlow()">Test Complete Flow</button>
+        <div id="completeFlowResult" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Configuration
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxEF6YxTEBVJa0LTrOOBucJL5asH3Dsi7nLzQ0y23K7FEGsu3CfdEavLfpEQRIPEyW-/exec';
+        
+        function showResult(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+            element.className = `result ${isError ? 'error' : 'success'}`;
+        }
+        
+        async function testOrderIDGeneration() {
+            const resultDiv = document.getElementById('orderIdResult');
+            resultDiv.textContent = 'Testing...';
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getNextOrderID`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    showResult('orderIdResult', `❌ Error: ${data.error}\n\nDetails: ${JSON.stringify(data, null, 2)}`, true);
+                } else if (data.orderID) {
+                    showResult('orderIdResult', `✅ Success! Generated Order ID: ${data.orderID}\n\nResponse: ${JSON.stringify(data, null, 2)}`);
+                } else {
+                    showResult('orderIdResult', `⚠️ Unexpected response: ${JSON.stringify(data, null, 2)}`, true);
+                }
+            } catch (error) {
+                showResult('orderIdResult', `❌ Network Error: ${error.message}\n\nThis usually means:\n1. The script URL is incorrect\n2. The script is not deployed as a web app\n3. There are CORS issues`, true);
+            }
+        }
+        
+        async function testOrderSaving() {
+            const resultDiv = document.getElementById('orderSaveResult');
+            resultDiv.textContent = 'Testing...';
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            
+            try {
+                const testData = new FormData();
+                testData.append('action', 'saveOrder');
+                testData.append('orderID', 'TEST001');
+                testData.append('name', 'Test User');
+                testData.append('number', '+233123456789');
+                testData.append('network', 'MTN');
+                testData.append('bundle', '5GB - GH₵27');
+                testData.append('payment', 'Wallet');
+                testData.append('notes', 'This is a test order');
+                
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: testData
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    showResult('orderSaveResult', `❌ Error: ${data.error}\n\nDetails: ${JSON.stringify(data, null, 2)}`, true);
+                } else if (data.success) {
+                    showResult('orderSaveResult', `✅ Success! Order saved to Google Sheets\n\nResponse: ${JSON.stringify(data, null, 2)}`);
+                } else {
+                    showResult('orderSaveResult', `⚠️ Unexpected response: ${JSON.stringify(data, null, 2)}`, true);
+                }
+            } catch (error) {
+                showResult('orderSaveResult', `❌ Network Error: ${error.message}\n\nThis usually means:\n1. The script URL is incorrect\n2. The script is not deployed as a web app\n3. There are CORS issues`, true);
+            }
+        }
+        
+        async function testCompleteFlow() {
+            const resultDiv = document.getElementById('completeFlowResult');
+            resultDiv.textContent = 'Testing complete flow...';
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            
+            try {
+                // Step 1: Generate Order ID
+                const idResponse = await fetch(`${SCRIPT_URL}?action=getNextOrderID`);
+                const idData = await idResponse.json();
+                
+                if (idData.error) {
+                    showResult('completeFlowResult', `❌ Step 1 Failed - Order ID Generation: ${idData.error}`, true);
+                    return;
+                }
+                
+                const orderID = idData.orderID;
+                resultDiv.textContent = `Step 1 ✅ - Generated Order ID: ${orderID}\n\nStep 2: Saving order...`;
+                
+                // Step 2: Save Order
+                const saveData = new FormData();
+                saveData.append('action', 'saveOrder');
+                saveData.append('orderID', orderID);
+                saveData.append('name', 'Complete Flow Test');
+                saveData.append('number', '+233987654321');
+                saveData.append('network', 'Vodafone');
+                saveData.append('bundle', '10GB - GH₵50');
+                saveData.append('payment', 'Wallet');
+                saveData.append('notes', 'Complete flow test order');
+                
+                const saveResponse = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: saveData
+                });
+                
+                const saveResult = await saveResponse.json();
+                
+                if (saveResult.error) {
+                    showResult('completeFlowResult', `❌ Step 2 Failed - Order Saving: ${saveResult.error}\n\nOrder ID was generated: ${orderID}`, true);
+                } else if (saveResult.success) {
+                    showResult('completeFlowResult', `🎉 Complete Flow Success!\n\n✅ Order ID Generated: ${orderID}\n✅ Order Saved to Google Sheets\n\nResponse: ${JSON.stringify(saveResult, null, 2)}`);
+                } else {
+                    showResult('completeFlowResult', `⚠️ Step 2 - Unexpected response: ${JSON.stringify(saveResult, null, 2)}\n\nOrder ID was generated: ${orderID}`, true);
+                }
+                
+            } catch (error) {
+                showResult('completeFlowResult', `❌ Complete Flow Failed: ${error.message}`, true);
+            }
+        }
+    </script>
+</body>
+</html>

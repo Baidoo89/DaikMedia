@@ -175,8 +175,8 @@ localStorage.setItem('debug', 'true');
 
 ## 📞 Support
 
-- **Email**: info@daikmedia.com
-- **Phone**: +233 557 574 477
+- **Email**: sendtonnimdee@gmail.com
+- **Phone**: +233531257913
 - **Telegram**: @DaikMediaBot
 
 ## 📄 License
