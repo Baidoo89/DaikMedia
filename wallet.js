@@ -14,12 +14,12 @@ const packageData = {
     { name: "1GB", price: 5.50, validity: "30 Days" },
     { name: "2GB", price: 10.50, validity: "30 Days" },
     { name: "3GB", price: 15.50, validity: "30 Days" },
-    { name: "4GB", price: 20.00, validity: "30 Days" },
+    { name: "4GB", price: 20.50, validity: "30 Days" },
     { name: "5GB", price: 27.00, validity: "30 Days" },
     { name: "6GB", price: 34.00, validity: "30 Days" },
     { name: "8GB", price: 40.00, validity: "30 Days" },
-    { name: "10GB", price: 46.00, validity: "30 Days" },
-    { name: "15GB", price: 66.00, validity: "30 Days" },
+    { name: "10GB", price: 46.50, validity: "30 Days" },
+    { name: "15GB", price: 66.50, validity: "30 Days" },
     { name: "20GB", price: 88.00, validity: "30 Days" },
     { name: "25GB", price: 112.00, validity: "30 Days" },
     { name: "30GB", price: 139.00, validity: "30 Days" },
@@ -222,6 +222,8 @@ function updateBundles() {
   const orderSummary = document.getElementById('orderSummary');
   const submitBtn = document.getElementById('submitBtn');
   
+  console.log('Network selected:', network); // Debug log
+  
   // Clear previous bundles
   bundleSelect.innerHTML = '<option value="">-- Select Bundle --</option>';
   if (orderSummary) orderSummary.style.display = 'none';
@@ -231,6 +233,7 @@ function updateBundles() {
   
   // Get bundles for selected network
   const networkBundles = packageData[network] || [];
+  console.log('Network bundles found:', networkBundles); // Debug log
   
   // Populate bundle options with prices
   networkBundles.forEach(bundle => {
@@ -239,6 +242,8 @@ function updateBundles() {
     option.textContent = `${bundle.name} - GH₵${bundle.price}`;
     bundleSelect.appendChild(option);
   });
+  
+  console.log('Bundle options added:', bundleSelect.options.length); // Debug log
   
   // Add change event listener to bundle select
   bundleSelect.onchange = function() {
@@ -367,8 +372,8 @@ function closeSuccessModal() {
 // Payment processing functions
 function processMoMoPayment() {
   const amount = parseFloat(document.getElementById('momoAmount').value);
-  if (!amount || amount < 5) {
-    alert('Please enter a valid amount (minimum GH₵5)');
+  if (!amount || amount < 1) {
+    alert('Please enter a valid amount (minimum GH₵1)');
     return;
   }
   
@@ -443,8 +448,8 @@ function processBankPayment() {
 
 function processCashAppPayment() {
   const amount = parseFloat(document.getElementById('cashappAmount').value);
-  if (!amount || amount < 5) {
-    alert('Please enter a valid amount (minimum GH₵5)');
+  if (!amount || amount < 1) {
+    alert('Please enter a valid amount (minimum GH₵1)');
     return;
   }
   
@@ -460,8 +465,8 @@ function processCashAppPayment() {
 function processCardPayment() {
   const amount = parseFloat(document.getElementById('cardAmount').value);
   
-  if (!amount || amount < 5) {
-    alert('Please enter a valid amount (minimum GH₵5)');
+  if (!amount || amount < 1) {
+    alert('Please enter a valid amount (minimum GH₵1)');
     return;
   }
   

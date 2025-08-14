@@ -82,6 +82,7 @@ document.addEventListener('DOMContentLoaded', function() {
     tabButtons.forEach(button => {
       button.addEventListener('click', () => {
         const network = button.dataset.network;
+        console.log('Tab clicked:', network); // Debug log
         
         // Remove active class from all buttons and sections
         tabButtons.forEach(btn => btn.classList.remove('active'));
@@ -90,8 +91,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add active class to clicked button and corresponding section
         button.classList.add('active');
         const targetSection = document.getElementById(network);
+        console.log('Target section:', targetSection); // Debug log
+        
         if (targetSection) {
           targetSection.classList.add('active');
+          console.log('Section activated:', network); // Debug log
+        } else {
+          console.error('Section not found for network:', network); // Debug log
         }
       });
     });
@@ -174,6 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const scriptURL = "https://script.google.com/macros/s/AKfycbzuFDTosabmYvMFlZxSyvp-LmRR09eKFiEUDWA1WlEP5cCPgPoTh82vG4vmsjBb9RypeQ/exec";
       
       const formData = new FormData();
+      formData.append('action', 'saveorder');  // Add this line!
       formData.append('name', name);
       formData.append('number', number);
       formData.append('bundle', bundle);
