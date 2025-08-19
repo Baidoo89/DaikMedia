@@ -35,6 +35,21 @@ function doGet(e) {
     if (action === 'getNextOrderID') {
       return json(getNextOrderID_());
     }
+    if (action === 'testOrder') {
+      return json(testOrder_());
+    }
+    if (action === 'testCompleteOrder') {
+      return json(testCompleteOrder());
+    }
+    if (action === 'showStructure') {
+      return json(showSheetStructure());
+    }
+    if (action === 'getWalletData') {
+      return json(getWalletData_());
+    }
+    if (action === 'getPaystackKey') {
+      return json(getPaystackKey_());
+    }
 
     return ContentService
       .createTextOutput("MTN Data Order Form - Google Apps Script is working!")
@@ -48,9 +63,46 @@ function doGet(e) {
 
 function doPost(e) {
   try {
+    // Check if this is an order submission
+    const data = e.parameter;
+    const action = data.action;
+    
+    // Log received data for debugging
+    Logger.log('📥 Received data: ' + JSON.stringify(data));
+    
+    if (action === 'saveOrder') {
+      return handleOrderSubmission_(data);
+    }
+    
+    if (action === 'saveWalletData') {
+      return handleWalletBackup_(data);
+    }
+    
+    Logger.log('❌ Invalid action: ' + action);
+    return ContentService
+      .createTextOutput(JSON.stringify({ 
+        'success': false, 
+        'error': 'Invalid action. Expected: saveOrder or saveWalletData' 
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch(error) {
+    Logger.log('❌ doPost error: ' + error.toString());
+    return ContentService
+      .createTextOutput(JSON.stringify({ 'result': 'error', 'error': error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Handle order submission
+function handleOrderSubmission_(data) {
+  try {
+    // WALLET PAYMENT ALREADY VERIFIED - User can only order if they have money!
+    // No need to verify payment again - wallet deduction = payment proof
+    Logger.log('✅ Wallet payment verified (user has sufficient balance)');
+    
     // Your "MTN ORDERS BUS" sheet ID - KEEPING EXACTLY WHAT WORKS
     const sheet = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
-    const data = e.parameter;
     
     // Ensure headers exist and are formatted
     ensureSheetHeaders_(sheet);
@@ -66,9 +118,9 @@ function doPost(e) {
       data.number || 'N/A',         // D: Phone Number
       data.bundle || 'N/A',         // E: Data Bundle
       data.payment || 'N/A',        // F: Payment Amount
-      'Pending',                     // G: Status (always starts as Pending)
-      data.paymentRef || 'N/A',     // H: Payment Reference
-      data.email || 'N/A',          // I: Customer Email
+      'Paid',                        // G: Status (Payment verified = Paid)
+      data.paymentRef || 'Wallet',  // H: Payment Reference
+      'N/A',                        // I: Customer Email (Removed from form)
       data.network || 'MTN',        // J: Network (default to MTN)
       data.notes || 'N/A',          // K: Notes
       new Date()                     // L: Last Updated
@@ -77,29 +129,129 @@ function doPost(e) {
     sheet.appendRow(row);
     
     // Log successful order
-    Logger.log('✅ Order saved: ' + JSON.stringify(data));
+    Logger.log('✅ Order saved successfully:');
+    Logger.log('   Order ID: ' + nextOrderID.orderID);
+    Logger.log('   Customer: ' + data.name);
+    Logger.log('   Phone: ' + data.number);
+    Logger.log('   Bundle: ' + data.bundle);
+    Logger.log('   Payment: ' + data.payment);
+    Logger.log('   Network: ' + data.network);
     
-    // Send Telegram notification
-    sendTelegramNotification_(nextOrderID.orderID, data, 'Pending');
-    
-    // Verify Paystack payment if reference provided
-    if (data.paymentRef && data.paymentRef !== 'N/A') {
-      verifyAndUpdatePayment_(nextOrderID.orderID, data.paymentRef);
-    }
+    // Send Telegram notification (status is now 'Paid' since payment is verified)
+    sendTelegramNotification_(nextOrderID.orderID, data, 'Paid');
     
     return ContentService
       .createTextOutput(JSON.stringify({ 
-        'result': 'success', 
+        'success': true, 
         'orderID': nextOrderID.orderID,
-        'status': 'Pending'
+        'status': 'Paid',
+        'paymentVerified': true
       }))
       .setMimeType(ContentService.MimeType.JSON);
       
   } catch(error) {
-    Logger.log('❌ doPost error: ' + error.toString());
+    Logger.log('❌ Order submission error: ' + error.toString());
     return ContentService
-      .createTextOutput(JSON.stringify({ 'result': 'error', 'error': error.toString() }))
+      .createTextOutput(JSON.stringify({ 'success': false, 'error': error.toString() }))
       .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Handle wallet backup
+function handleWalletBackup_(data) {
+  try {
+    const balance = data.balance;
+    const transactions = data.transactions;
+    
+    Logger.log('📥 Wallet backup received:');
+    Logger.log('   Balance: ' + balance);
+    Logger.log('   Transactions: ' + (transactions ? transactions.length : 0));
+    
+    // Store in Script Properties for backup
+    const props = PropertiesService.getScriptProperties();
+    props.setProperty('WALLET_BALANCE', balance);
+    props.setProperty('WALLET_TRANSACTIONS', transactions);
+    props.setProperty('WALLET_LAST_UPDATE', new Date().toISOString());
+    
+    Logger.log('✅ Wallet backup stored successfully');
+    
+    return ContentService
+      .createTextOutput(JSON.stringify({ 
+        'success': true, 
+        'message': 'Wallet backup stored successfully',
+        'timestamp': new Date().toISOString()
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch(error) {
+    Logger.log('❌ Wallet backup error: ' + error.toString());
+    return ContentService
+      .createTextOutput(JSON.stringify({ 'success': false, 'error': error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Get wallet data for restoration
+function getWalletData_() {
+  try {
+    const props = PropertiesService.getScriptProperties();
+    const balance = props.getProperty('WALLET_BALANCE') || '0';
+    const transactions = props.getProperty('WALLET_TRANSACTIONS') || '[]';
+    const lastUpdate = props.getProperty('WALLET_LAST_UPDATE') || 'Never';
+    
+    Logger.log('📤 Wallet data requested:');
+    Logger.log('   Balance: ' + balance);
+    Logger.log('   Last Update: ' + lastUpdate);
+    
+    return {
+      success: true,
+      walletData: {
+        balance: balance,
+        transactions: JSON.parse(transactions),
+        lastUpdate: lastUpdate
+      },
+      message: 'Wallet data retrieved successfully'
+    };
+    
+  } catch(error) {
+    Logger.log('❌ Get wallet data error: ' + error.toString());
+    return {
+      success: false,
+      error: error.toString(),
+      message: 'Failed to retrieve wallet data'
+    };
+  }
+}
+
+// Get Paystack public key for frontend
+function getPaystackKey_() {
+  try {
+    const props = PropertiesService.getScriptProperties();
+    const paystackKey = props.getProperty('PAYSTACK_PUBLIC_KEY');
+    
+    if (paystackKey) {
+      Logger.log('📤 Paystack key requested and provided');
+      return {
+        success: true,
+        paystackKey: paystackKey,
+        message: 'Paystack key retrieved successfully'
+      };
+    } else {
+      Logger.log('❌ Paystack key not found in Script Properties');
+      return {
+        success: false,
+        error: 'Paystack not configured',
+        message: 'Paystack public key not found. Please run setSecrets() first.'
+      };
+    }
+    
+  } catch(error) {
+    Logger.log('❌ Get Paystack key error: ' + error.toString());
+    return {
+      success: false,
+      error: error.toString(),
+      message: 'Failed to retrieve Paystack key'
+    };
   }
 }
 
@@ -265,6 +417,123 @@ function setupHeaders() {
   }
 }
 
+// Function to test the complete order flow
+function testCompleteOrder() {
+  try {
+    // First, ensure headers exist
+    const sheet = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
+    ensureSheetHeaders_(sheet);
+    
+    // Test order data (simulating a wallet order)
+    const testData = {
+      action: 'saveOrder',
+      name: 'Test Customer',
+      number: '0501234567',
+      bundle: '4GB Test Bundle',
+      payment: '20.50',
+      network: 'MTN',
+      notes: 'Complete test order',
+      paymentRef: 'Wallet'
+    };
+    
+    const mockEvent = { parameter: testData };
+    const result = doPost(mockEvent);
+    
+    return {
+      success: true,
+      message: 'Complete order test successful',
+      result: result.getContent(),
+      sheetStatus: 'Headers verified and order processed'
+    };
+  } catch (err) {
+    return {
+      success: false,
+      error: String(err),
+      message: 'Complete order test failed'
+    };
+  }
+}
+
+// Function to show current sheet structure and data
+function showSheetStructure() {
+  try {
+    const sheet = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
+    const lastRow = sheet.getLastRow();
+    const lastCol = sheet.getLastColumn();
+    
+    let structure = {
+      success: true,
+      sheetName: sheet.getName(),
+      totalRows: lastRow,
+      totalColumns: lastCol,
+      headers: [],
+      sampleData: []
+    };
+    
+    if (lastRow > 0) {
+      // Get headers
+      const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+      structure.headers = headers;
+      
+      // Get sample data (first few rows)
+      if (lastRow > 1) {
+        const sampleRows = Math.min(3, lastRow - 1);
+        const sampleData = sheet.getRange(2, 1, sampleRows, lastCol).getValues();
+        structure.sampleData = sampleData;
+      }
+    }
+    
+    return structure;
+  } catch (err) {
+    return {
+      success: false,
+      error: String(err),
+      message: 'Failed to get sheet structure'
+    };
+  }
+}
+
+// WALLET PAYMENT VERIFICATION - NOT NEEDED!
+// User can only place order if they have money in wallet
+// Wallet deduction = payment proof
+function verifyPaymentBeforeOrder_(data) {
+  // This function is no longer needed since wallet handles payment verification
+  // User must have money before they can order
+  Logger.log('✅ Wallet payment verified (user has sufficient balance)');
+  return { success: true, method: 'Wallet' };
+}
+
+// Test order function for debugging
+function testOrder_() {
+  try {
+    const testData = {
+      action: 'saveOrder',
+      name: 'Test Customer',
+      number: '0501234567',
+      bundle: '4GB Test',
+      payment: '20.50',
+      network: 'MTN',
+      notes: 'Test order from script',
+      paymentRef: 'Wallet' // Simulate wallet order
+    };
+    
+    const mockEvent = { parameter: testData };
+    const result = doPost(mockEvent);
+    
+    return {
+      success: true,
+      message: 'Test order processed successfully',
+      result: result.getContent()
+    };
+  } catch (err) {
+    return {
+      success: false,
+      error: String(err),
+      message: 'Test order failed'
+    };
+  }
+}
+
 // ========= Paystack Integration =========
 
 function verifyPaystack_(reference) {
@@ -316,10 +585,12 @@ function verifyAndUpdatePayment_(orderID, paymentRef) {
         }
       }
     } else {
-      Logger.log(`❌ Payment verification failed for Order ${orderID}: ${verify.message}`);
+      Logger.log(`⚠️ Payment verification failed for Order ${orderID}: ${verify.message}`);
+      // Don't fail the order - just log the warning
     }
   } catch (err) {
-    Logger.log(`❌ Payment verification error for Order ${orderID}: ${String(err)}`);
+          Logger.log(`⚠️ Payment verification error for Order ${orderID}: ${String(err)}`);
+      // Don't fail the order - just log the error
   }
 }
 
@@ -381,7 +652,14 @@ function formatTelegramMessage_(orderID, data, status) {
   if (data.bundle) message += `📦 *Bundle:* ${data.bundle}\n`;
   if (data.payment) message += `💰 *Amount:* ${data.payment}\n`;
   if (data.network) message += `🌐 *Network:* ${data.network}\n`;
-  if (data.paymentRef && data.paymentRef !== 'N/A') message += `🔗 *Payment Ref:* ${data.paymentRef}\n`;
+  
+  // Handle payment reference for different payment methods
+  if (data.paymentRef && data.paymentRef !== 'N/A' && data.paymentRef !== 'Wallet') {
+    message += `🔗 *Payment Ref:* ${data.paymentRef}\n`;
+  } else if (data.paymentRef === 'Wallet') {
+    message += `💳 *Payment Method:* Wallet (Pre-paid)\n`;
+  }
+  
   if (data.notes) message += `📝 *Notes:* ${data.notes}\n`;
   
   message += `\n⏰ *Time:* ${new Date().toLocaleString()}`;

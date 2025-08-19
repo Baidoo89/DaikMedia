@@ -70,6 +70,19 @@
             <span>History</span>
           </button>
           
+          <!-- Debug buttons for troubleshooting -->
+          <button class="action-btn debug" onclick="refreshWallet()" title="Refresh wallet data and check balance">
+            <div class="btn-icon">
+              <i class="fas fa-sync-alt"></i>
+            </div>
+            <span>Check Balance</span>
+          </button>
+          <button class="action-btn debug" onclick="debugWallet()" title="View wallet status and recent activity">
+            <div class="btn-icon">
+              <i class="fas fa-info-circle"></i>
+            </div>
+            <span>Wallet Status</span>
+          </button>
         </div>
       </div>
     </div>
@@ -98,6 +111,8 @@
           <label for="number">📞 Phone Number</label>
           <input type="tel" id="number" required placeholder="e.g., 233244123456">
         </div>
+
+
 
         <div class="form-group">
           <label for="network">🌐 Network</label>

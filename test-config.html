@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration Test - Daik Media</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Configuration Test - Daik Media</h1>
+    
+    <div class="test-section">
+        <h2>1. Config File Test</h2>
+        <button onclick="testConfig()">Test Config Loading</button>
+        <div id="configResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Google Apps Script Test</h2>
+        <button onclick="testGoogleScript()">Test Basic Connection</button>
+        <div id="scriptResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Paystack Key Test</h2>
+        <button onclick="testPaystackKey()">Test Paystack Key</button>
+        <div id="paystackResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Wallet Data Test</h2>
+        <button onclick="testWalletData()">Test Wallet Data</button>
+        <div id="walletResult"></div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        function testConfig() {
+            const resultDiv = document.getElementById('configResult');
+            try {
+                if (window.CONFIG) {
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Config loaded successfully!</div>
+                        <div class="info">Company: ${CONFIG.COMPANY.NAME}</div>
+                        <div class="info">Script URL: ${CONFIG.GOOGLE_SHEETS.SCRIPT_URL}</div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = '<div class="error">❌ Config not loaded!</div>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Config error: ${error.message}</div>`;
+            }
+        }
+        
+        async function testGoogleScript() {
+            const resultDiv = document.getElementById('scriptResult');
+            resultDiv.innerHTML = '<div class="info">🔄 Testing connection...</div>';
+            
+            try {
+                const response = await fetch(CONFIG.GOOGLE_SHEETS.SCRIPT_URL);
+                const text = await response.text();
+                
+                if (text.includes('MTN Data Order Form - Google Apps Script is working!')) {
+                    resultDiv.innerHTML = '<div class="success">✅ Google Apps Script is working!</div>';
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Unexpected response: ${text.substring(0, 100)}...</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Connection failed: ${error.message}</div>`;
+            }
+        }
+        
+        async function testPaystackKey() {
+            const resultDiv = document.getElementById('paystackResult');
+            resultDiv.innerHTML = '<div class="info">🔄 Testing Paystack key...</div>';
+            
+            try {
+                const response = await fetch(`${CONFIG.GOOGLE_SHEETS.SCRIPT_URL}?action=getPaystackKey`);
+                const data = await response.json();
+                
+                if (data.success && data.paystackKey) {
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Paystack key retrieved successfully!</div>
+                        <div class="info">Key: ${data.paystackKey.substring(0, 20)}...</div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">❌ Paystack key not found!</div>
+                        <div class="info">Error: ${data.error || 'Unknown error'}</div>
+                        <div class="info">Message: ${data.message}</div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Paystack test failed: ${error.message}</div>`;
+            }
+        }
+        
+        async function testWalletData() {
+            const resultDiv = document.getElementById('walletResult');
+            resultDiv.innerHTML = '<div class="info">🔄 Testing wallet data...</div>';
+            
+            try {
+                const response = await fetch(`${CONFIG.GOOGLE_SHEETS.SCRIPT_URL}?action=getWalletData`);
+                const data = await response.json();
+                
+                if (data.success && data.walletData) {
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Wallet data retrieved successfully!</div>
+                        <div class="info">Balance: ${data.walletData.balance}</div>
+                        <div class="info">Transactions: ${data.walletData.transactions.length}</div>
+                        <div class="info">Last Update: ${data.walletData.lastUpdate}</div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">❌ Wallet data not found!</div>
+                        <div class="info">Error: ${data.error || 'Unknown error'}</div>
+                        <div class="info">Message: ${data.message}</div>
+                    `;
+                    <div class="info">💡 This is normal if you haven't used the wallet yet.</div>
+                `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Wallet test failed: ${error.message}</div>`;
+            }
+        }
+        
+        // Auto-run config test on page load
+        window.onload = function() {
+            testConfig();
+        };
+    </script>
+</body>
+</html>

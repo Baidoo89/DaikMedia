@@ -10,10 +10,10 @@ const CONFIG = {
     WEBSITE: 'https://daikmedia.com'
   },
   
-  // Google Sheets Configuration (Public URL only)
-  GOOGLE_SHEETS: {
-    SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzuFDTosabmYvMFlZxSyvp-LmRR09eKFiEUDWA1WlEP5cCPgPoTh82vG4vmsjBb9RypeQ/exec'
-  }
+                // Google Sheets Configuration (Public URL only)
+              GOOGLE_SHEETS: {
+                SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzNiUdkjG3-yEAsw26P9RQOMip0C0OHaWaL4osDLUCXx7hivLAsa5nIMLVmLI8raCyoVA/exec'
+              }
 };
 
 // Export configuration

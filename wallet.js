@@ -4,9 +4,91 @@
 // const PAYSTACK_PUBLIC_KEY = CONFIG.PAYSTACK.PUBLIC_KEY; // REMOVED
 // const PAYSTACK_SECRET_KEY = CONFIG.PAYSTACK.SECRET_KEY; // REMOVED
 
-// Initialize wallet data
-let walletBalance = parseFloat(localStorage.getItem('walletBalance')) || 0;
-let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+// Initialize wallet data with better error handling
+let walletBalance = 0;
+let transactions = [];
+
+// Load wallet data from localStorage with fallback
+function loadWalletData() {
+  try {
+    // Try to load from localStorage
+    const storedBalance = localStorage.getItem('walletBalance');
+    const storedTransactions = localStorage.getItem('transactions');
+    
+    if (storedBalance !== null) {
+      walletBalance = parseFloat(storedBalance) || 0;
+    }
+    
+    if (storedTransactions !== null) {
+      transactions = JSON.parse(storedTransactions) || [];
+    }
+    
+    console.log('✅ Wallet data loaded from localStorage:', { walletBalance, transactionCount: transactions.length });
+    
+    // Also try to load from server as backup
+    loadWalletFromServer();
+    
+  } catch (error) {
+    console.error('❌ Error loading wallet data from localStorage:', error);
+    // Try to load from server as fallback
+    loadWalletFromServer();
+  }
+}
+
+// Load wallet data from server as backup
+async function loadWalletFromServer() {
+  try {
+    const scriptURL = CONFIG.GOOGLE_SHEETS.SCRIPT_URL;
+    const response = await fetch(`${scriptURL}?action=getWalletData`, {
+      method: 'GET'
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.walletData) {
+        // Update local data with server data
+        walletBalance = parseFloat(data.walletData.balance) || 0;
+        transactions = data.walletData.transactions || [];
+        
+        // Update localStorage with server data
+        localStorage.setItem('walletBalance', walletBalance.toString());
+        localStorage.setItem('transactions', JSON.stringify(transactions));
+        
+        console.log('✅ Wallet data loaded from server backup:', { walletBalance, transactionCount: transactions.length });
+        
+        // Update display
+        updateWalletDisplay();
+        loadTransactionHistory();
+      }
+    }
+  } catch (error) {
+    console.error('⚠️ Could not load wallet from server (using local data):', error);
+  }
+}
+
+// Save wallet data to server as backup
+async function saveWalletToServer() {
+  try {
+    const scriptURL = CONFIG.GOOGLE_SHEETS.SCRIPT_URL;
+    const formData = new FormData();
+    formData.append('action', 'saveWalletData');
+    formData.append('balance', walletBalance.toString());
+    formData.append('transactions', JSON.stringify(transactions));
+    
+    const response = await fetch(scriptURL, {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (response.ok) {
+      console.log('✅ Wallet data saved to server backup');
+    } else {
+      console.warn('⚠️ Could not save wallet to server');
+    }
+  } catch (error) {
+    console.error('❌ Error saving wallet to server:', error);
+  }
+}
 
 // Data packages for different networks
 const packageData = {
@@ -65,6 +147,7 @@ const chatId = "7271153158";
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
+  loadWalletData(); // Load data on page load
   updateWalletDisplay();
   setupEventListeners();
   loadTransactionHistory();
@@ -83,10 +166,80 @@ function updateWalletDisplay() {
   const balanceElement = document.getElementById('walletBalance');
   if (balanceElement) {
     balanceElement.textContent = `GH₵${walletBalance.toFixed(2)}`;
+    console.log('💰 Wallet display updated:', walletBalance);
+  } else {
+    console.warn('⚠️ Wallet balance element not found');
   }
   
   // Update wallet statistics
   updateWalletStats();
+}
+
+// Manual refresh function for troubleshooting
+function refreshWallet() {
+  console.log('🔄 Manual wallet refresh requested');
+  
+  // Reload from localStorage
+  loadWalletData();
+  
+  // Update display
+  updateWalletDisplay();
+  loadTransactionHistory();
+  
+  // Show user-friendly confirmation
+  const status = walletBalance > 0 ? '✅ Active' : '⚠️ Empty';
+  const message = `
+🔄 **Wallet Refreshed Successfully!**
+
+💰 **Current Balance:** GH₵${walletBalance.toFixed(2)}
+📊 **Total Transactions:** ${transactions.length}
+💡 **Status:** ${status}
+
+${walletBalance > 0 ? 'Your wallet is ready for orders!' : 'Load money to start ordering data bundles.'}
+  `;
+  
+  showSuccessModal(
+    'Wallet Refreshed',
+    message,
+    true
+  );
+}
+
+// Debug wallet function
+function debugWallet() {
+  console.log('🔍 Wallet Debug Information:', {
+    currentBalance: walletBalance,
+    transactionCount: transactions.length,
+    localStorageBalance: localStorage.getItem('walletBalance'),
+    localStorageTransactions: localStorage.getItem('transactions'),
+    recentTransactions: transactions.slice(0, 3)
+  });
+  
+  // Show user-friendly wallet status
+  const recentActivity = transactions.slice(0, 3).map(t => {
+    const type = t.type === 'credit' ? 'Added' : 'Spent';
+    const date = new Date(t.date).toLocaleDateString();
+    return `${type} GH₵${t.amount} on ${date}`;
+  }).join('\n');
+  
+  const debugInfo = `
+🔍 **Wallet Status Report**
+
+💰 **Current Balance:** GH₵${walletBalance.toFixed(2)}
+📊 **Total Transactions:** ${transactions.length}
+📅 **Last Activity:** ${transactions.length > 0 ? new Date(transactions[0].date).toLocaleDateString() : 'No activity yet'}
+
+📝 **Recent Activity:**
+${recentActivity || 'No recent transactions'}
+
+💡 **Status:** ${walletBalance > 0 ? '✅ Wallet Active' : '⚠️ Wallet Empty'}
+  `;
+  
+  showSuccessModal(
+    'Wallet Status Report',
+    debugInfo,
+    true
+  );
 }
 
 // Update wallet statistics
@@ -95,7 +248,6 @@ function updateWalletStats() {
   let totalLoaded = 0;
   let totalSpent = 0;
   
-  const transactions = JSON.parse(localStorage.getItem('transactions')) || [];
   transactions.forEach(transaction => {
     if (transaction.type === 'credit') {
       totalLoaded += transaction.amount;
@@ -132,6 +284,8 @@ function updateWalletStats() {
   if (currentBalanceSummary) {
     currentBalanceSummary.textContent = `GH₵${walletBalance.toFixed(2)}`;
   }
+  
+  console.log('📊 Wallet stats updated:', { totalLoaded, totalSpent, currentBalance: walletBalance });
 }
 
 // Handle URL parameters for pre-selecting bundles from services page
@@ -377,35 +531,94 @@ function processMoMoPayment() {
     return;
   }
   
-  // Initialize Paystack mobile money payment
-  const handler = PaystackPop.setup({
-    key: 'pk_live_e6b3d2f2d1e0efa6c8d8675c6c555cb0576b2e33',
-    email: 'customer@daikmedia.com', // You can make this dynamic
-    amount: Math.round(amount * 100), // Paystack expects amount in kobo
-    currency: 'GHS',
-    channels: ['mobile_money'], // Enable mobile money channels
-    callback: function(response) {
-      // Payment successful
-      showSuccessModal(
-        'Payment Successful!',
-        `Your wallet has been credited with GH₵${amount.toFixed(2)}. Transaction ID: ${response.reference}. You can now place your orders.`,
-        true
-      );
-      
-      // Add to wallet balance
-      addToWallet(amount, 'Paystack Mobile Money');
-      closeLoadMoneyModal();
-      
-      // Log successful payment
-      console.log('Mobile money payment successful:', response);
-    },
-    onClose: function() {
-      // Payment cancelled
-      alert('Payment was cancelled. Please try again.');
-    }
-  });
+  // Show loading state
+  const momoBtn = document.querySelector('[onclick="processMoMoPayment()"]');
+  const originalText = momoBtn.innerHTML;
+  momoBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+  momoBtn.disabled = true;
   
-  handler.openIframe();
+  // Get Paystack key from Google Apps Script
+  getPaystackKey().then(publicKey => {
+    if (!publicKey) {
+      showSuccessModal('❌ Configuration Error', 'Paystack is not configured. Please contact support.', false);
+      momoBtn.innerHTML = originalText;
+      momoBtn.disabled = false;
+      return;
+    }
+    
+    // Initialize Paystack mobile money payment
+    const handler = PaystackPop.setup({
+      key: publicKey,
+      email: 'customer@daikmedia.com', // You can make this dynamic
+      amount: Math.round(amount * 100), // Paystack expects amount in kobo
+      currency: 'GHS',
+      channels: ['mobile_money'], // Enable mobile money channels
+      callback: function(response) {
+        console.log('✅ MoMo payment successful:', response);
+        
+        // Verify the payment actually worked
+        if (response.status === 'success' && response.reference) {
+          // Add to wallet with proper error handling
+          const result = addToWallet(amount, 'Paystack Mobile Money');
+          
+          if (result.success) {
+            showSuccessModal(
+              'Payment Successful! 🎉',
+              `Your wallet has been credited with GH₵${amount.toFixed(2)}.
+              
+Transaction ID: ${response.reference}
+Reference: ${result.transaction.reference}
+
+You can now place your orders!`,
+              true
+            );
+            
+            closeLoadMoneyModal();
+            
+            // Log successful payment
+            console.log('✅ MoMo payment processed and wallet credited:', {
+              amount: amount,
+              paystackRef: response.reference,
+              walletRef: result.transaction.reference,
+              newBalance: result.newBalance
+            });
+          } else {
+            // Payment succeeded but wallet credit failed
+            showSuccessModal(
+              '⚠️ Payment Received, Wallet Issue',
+              `Your payment of GH₵${amount.toFixed(2)} was successful, but there was an issue crediting your wallet. Please contact support with Transaction ID: ${response.reference}`,
+              false
+            );
+          }
+        } else {
+          showSuccessModal(
+            '⚠️ Payment Issue',
+            'Payment was received but there was an issue. Please contact support.',
+            false
+          );
+        }
+        
+        // Reset button
+        momoBtn.innerHTML = originalText;
+        momoBtn.disabled = false;
+      },
+      onClose: function() {
+        // Payment cancelled
+        alert('Payment was cancelled. Please try again.');
+        
+        // Reset button
+        momoBtn.innerHTML = originalText;
+        momoBtn.disabled = false;
+      }
+    });
+    
+    handler.openIframe();
+  }).catch(error => {
+    console.error('❌ Error getting Paystack key:', error);
+    showSuccessModal('❌ Configuration Error', 'Unable to load payment configuration. Please contact support.', false);
+    momoBtn.innerHTML = originalText;
+    momoBtn.disabled = false;
+  });
 }
 
 function processBankPayment() {
@@ -415,35 +628,94 @@ function processBankPayment() {
     return;
   }
   
-  // Initialize Paystack bank transfer payment
-  const handler = PaystackPop.setup({
-    key: 'pk_live_e6b3d2f2d1e0efa6c8d8675c6c555cb0576b2e33',
-    email: 'customer@daikmedia.com', // You can make this dynamic
-    amount: Math.round(amount * 100), // Paystack expects amount in kobo
-    currency: 'GHS',
-    channels: ['bank'], // Enable bank transfer channels
-    callback: function(response) {
-      // Payment successful
-      showSuccessModal(
-        'Payment Successful!',
-        `Your wallet has been credited with GH₵${amount.toFixed(2)}. Transaction ID: ${response.reference}. You can now place your orders.`,
-        true
-      );
-      
-      // Add to wallet balance
-      addToWallet(amount, 'Paystack Bank Transfer');
-      closeLoadMoneyModal();
-      
-      // Log successful payment
-      console.log('Bank transfer successful:', response);
-    },
-    onClose: function() {
-      // Payment cancelled
-      alert('Payment was cancelled. Please try again.');
-    }
-  });
+  // Show loading state
+  const bankBtn = document.querySelector('[onclick="processBankPayment()"]');
+  const originalText = bankBtn.innerHTML;
+  bankBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+  bankBtn.disabled = true;
   
-  handler.openIframe();
+  // Get Paystack key from Google Apps Script
+  getPaystackKey().then(publicKey => {
+    if (!publicKey) {
+      showSuccessModal('❌ Configuration Error', 'Paystack is not configured. Please contact support.', false);
+      bankBtn.innerHTML = originalText;
+      bankBtn.disabled = false;
+      return;
+    }
+    
+    // Initialize Paystack bank transfer payment
+    const handler = PaystackPop.setup({
+      key: publicKey,
+      email: 'customer@daikmedia.com', // You can make this dynamic
+      amount: Math.round(amount * 100), // Paystack expects amount in kobo
+      currency: 'GHS',
+      channels: ['bank'], // Enable bank transfer channels
+      callback: function(response) {
+        console.log('✅ Bank transfer successful:', response);
+        
+        // Verify the payment actually worked
+        if (response.status === 'success' && response.reference) {
+          // Add to wallet with proper error handling
+          const result = addToWallet(amount, 'Paystack Bank Transfer');
+          
+          if (result.success) {
+            showSuccessModal(
+              'Payment Successful! 🎉',
+              `Your wallet has been credited with GH₵${amount.toFixed(2)}.
+              
+Transaction ID: ${response.reference}
+Reference: ${result.transaction.reference}
+
+You can now place your orders!`,
+              true
+            );
+            
+            closeLoadMoneyModal();
+            
+            // Log successful payment
+            console.log('✅ Bank transfer processed and wallet credited:', {
+              amount: amount,
+              paystackRef: response.reference,
+              walletRef: result.transaction.reference,
+              newBalance: result.newBalance
+            });
+          } else {
+            // Payment succeeded but wallet credit failed
+            showSuccessModal(
+              '⚠️ Payment Received, Wallet Issue',
+              `Your payment of GH₵${amount.toFixed(2)} was successful, but there was an issue crediting your wallet. Please contact support with Transaction ID: ${response.reference}`,
+              false
+            );
+          }
+        } else {
+          showSuccessModal(
+            '⚠️ Payment Issue',
+            'Payment was received but there was an issue. Please contact support.',
+            false
+          );
+        }
+        
+        // Reset button
+        bankBtn.innerHTML = originalText;
+        bankBtn.disabled = false;
+      },
+      onClose: function() {
+        // Payment cancelled
+        alert('Payment was cancelled. Please try again.');
+        
+        // Reset button
+        bankBtn.innerHTML = originalText;
+        bankBtn.disabled = false;
+      }
+    });
+    
+    handler.openIframe();
+  }).catch(error => {
+    console.error('❌ Error getting Paystack key:', error);
+    showSuccessModal('❌ Configuration Error', 'Unable to load payment configuration. Please contact support.', false);
+    bankBtn.innerHTML = originalText;
+    bankBtn.disabled = false;
+  });
 }
 
 function processCashAppPayment() {
@@ -470,60 +742,194 @@ function processCardPayment() {
     return;
   }
   
-  // Initialize Paystack payment
-  const handler = PaystackPop.setup({
-    key: 'pk_live_e6b3d2f2d1e0efa6c8d8675c6c555cb0576b2e33',
-    email: 'customer@daikmedia.com', // You can make this dynamic
-    amount: Math.round(amount * 100), // Paystack expects amount in kobo (smallest currency unit)
-    currency: 'GHS',
-    callback: function(response) {
-      // Payment successful
-      showSuccessModal(
-        'Payment Successful!',
-        `Your wallet has been credited with GH₵${amount.toFixed(2)}. Transaction ID: ${response.reference}. You can now place your orders.`,
-        true
-      );
-      
-      // Add to wallet balance
-      addToWallet(amount, 'Paystack Card Payment');
-      closeLoadMoneyModal();
-      
-      // Log successful payment
-      console.log('Payment successful:', response);
-    },
-    onClose: function() {
-      // Payment cancelled
-      alert('Payment was cancelled. Please try again.');
-    }
-  });
+  // Show loading state
+  const cardBtn = document.querySelector('[onclick="processCardPayment()"]');
+  const originalText = cardBtn.innerHTML;
+  cardBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+  cardBtn.disabled = true;
   
-  handler.openIframe();
+  // Get Paystack key from Google Apps Script
+  getPaystackKey().then(publicKey => {
+    if (!publicKey) {
+      showSuccessModal('❌ Configuration Error', 'Paystack is not configured. Please contact support.', false);
+      cardBtn.innerHTML = originalText;
+      cardBtn.disabled = false;
+      return;
+    }
+    
+    // Initialize Paystack payment
+    const handler = PaystackPop.setup({
+      key: publicKey,
+      email: 'customer@daikmedia.com', // You can make this dynamic
+      amount: Math.round(amount * 100), // Paystack expects amount in kobo (smallest currency unit)
+      currency: 'GHS',
+      callback: function(response) {
+        console.log('✅ Card payment successful:', response);
+        
+        // Verify the payment actually worked
+        if (response.status === 'success' && response.reference) {
+          // Add to wallet with proper error handling
+          const result = addToWallet(amount, 'Paystack Card Payment');
+          
+          if (result.success) {
+            showSuccessModal(
+              'Payment Successful! 🎉',
+              `Your wallet has been credited with GH₵${amount.toFixed(2)}.
+              
+Transaction ID: ${response.reference}
+Reference: ${result.transaction.reference}
+
+You can now place your orders!`,
+              true
+            );
+            
+            closeLoadMoneyModal();
+            
+            // Log successful payment
+            console.log('✅ Card payment processed and wallet credited:', {
+              amount: amount,
+              paystackRef: response.reference,
+              walletRef: result.transaction.reference,
+              newBalance: result.newBalance
+            });
+          } else {
+            // Payment succeeded but wallet credit failed
+            showSuccessModal(
+              '⚠️ Payment Received, Wallet Issue',
+              `Your payment of GH₵${amount.toFixed(2)} was successful, but there was an issue crediting your wallet. Please contact support with Transaction ID: ${response.reference}`,
+              false
+            );
+          }
+        } else {
+          showSuccessModal(
+            '⚠️ Payment Issue',
+            'Payment was received but there was an issue. Please contact support.',
+            false
+          );
+        }
+        
+        // Reset button
+        cardBtn.innerHTML = originalText;
+        cardBtn.disabled = false;
+      },
+      onClose: function() {
+        // Payment cancelled
+        alert('Payment was cancelled. Please try again.');
+        
+        // Reset button
+        cardBtn.innerHTML = originalText;
+        cardBtn.disabled = false;
+      }
+    });
+    
+    handler.openIframe();
+  }).catch(error => {
+    console.error('❌ Error getting Paystack key:', error);
+    showSuccessModal('❌ Configuration Error', 'Unable to load payment configuration. Please contact support.', false);
+    cardBtn.innerHTML = originalText;
+    cardBtn.disabled = false;
+  });
 }
 
 // Wallet functions
 function addToWallet(amount, method) {
-  walletBalance += amount;
-  localStorage.setItem('walletBalance', walletBalance.toString());
-  
-  // Add transaction
-  const transaction = {
-    id: Date.now(),
-    type: 'credit',
-    amount: amount,
-    method: method,
-    date: new Date().toISOString(),
-    description: `Wallet top-up via ${method}`
-  };
-  
-  transactions.unshift(transaction);
-  localStorage.setItem('transactions', JSON.stringify(transactions));
-  
-  updateWalletDisplay();
-  updateWalletStats();
-  
-  // Check if user can now place orders
-  if (document.getElementById('bundle')) {
-    checkOrderEligibility();
+  try {
+    // Validate amount
+    if (!amount || isNaN(amount) || amount <= 0) {
+      console.error('❌ Invalid amount for wallet:', amount);
+      throw new Error('Invalid amount');
+    }
+    
+    // Store old balance for comparison
+    const oldBalance = walletBalance;
+    
+    // Add to wallet balance
+    walletBalance += amount;
+    
+    // Validate the addition worked
+    if (walletBalance !== oldBalance + amount) {
+      console.error('❌ Wallet balance calculation error');
+      throw new Error('Balance calculation failed');
+    }
+    
+    // Save to localStorage
+    try {
+      localStorage.setItem('walletBalance', walletBalance.toString());
+      console.log('✅ Wallet balance saved to localStorage:', walletBalance);
+    } catch (localError) {
+      console.error('❌ Failed to save to localStorage:', localError);
+      // Continue anyway - we'll try server backup
+    }
+    
+    // Create transaction record
+    const transaction = {
+      id: Date.now(),
+      type: 'credit',
+      amount: amount,
+      method: method,
+      date: new Date().toISOString(),
+      description: `Wallet top-up via ${method}`,
+      reference: `TXN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    };
+    
+    // Add to transactions array
+    transactions.unshift(transaction);
+    
+    // Save transactions to localStorage
+    try {
+      localStorage.setItem('transactions', JSON.stringify(transactions));
+      console.log('✅ Transactions saved to localStorage');
+    } catch (localError) {
+      console.error('❌ Failed to save transactions to localStorage:', localError);
+    }
+    
+    // Save to server as backup
+    saveWalletToServer();
+    
+    // Update display
+    updateWalletDisplay();
+    updateWalletStats();
+    
+    // Check if user can now place orders
+    if (document.getElementById('bundle')) {
+      checkOrderEligibility();
+    }
+    
+    // Log successful addition
+    console.log('✅ Successfully added to wallet:', {
+      amount: amount,
+      method: method,
+      oldBalance: oldBalance,
+      newBalance: walletBalance,
+      transactionId: transaction.id
+    });
+    
+    // Return success with details
+    return {
+      success: true,
+      oldBalance: oldBalance,
+      newBalance: walletBalance,
+      added: amount,
+      transaction: transaction
+    };
+    
+  } catch (error) {
+    console.error('❌ Error adding to wallet:', error);
+    
+    // Revert balance if there was an error
+    walletBalance = oldBalance || 0;
+    
+    // Show error to user
+    showSuccessModal(
+      '❌ Wallet Error',
+      `Failed to add GH₵${amount} to your wallet. Please contact support. Error: ${error.message}`,
+      false
+    );
+    
+    return {
+      success: false,
+      error: error.message
+    };
   }
 }
 
@@ -753,8 +1159,10 @@ async function handleOrderSubmission(e) {
   
   sendTelegramNotification(telegramMessage);
   
-  // Save to Google Sheets
-  saveToGoogleSheets(name, number, network, bundle, 'Wallet', notes, orderID)
+  // Save to Google Sheets - extract bundle name and price separately
+  const bundleName = bundle.split(' - ')[0]; // Get just "4GB" from "4GB - GH₵20.50"
+  const bundlePrice = bundle.split('GH₵')[1]; // Get just "20.50" from "4GB - GH₵20.50"
+  saveToGoogleSheets(name, number, network, bundleName, bundlePrice, notes, orderID)
     .then(() => {
       showSuccessModal(
         'Order Placed Successfully! 🎉',
@@ -884,17 +1292,19 @@ async function saveToGoogleSheets(name, number, network, bundle, payment, notes,
     formData.append('orderID', orderID);
     formData.append('name', name);
     formData.append('number', number);
-    formData.append('network', network);
     formData.append('bundle', bundle);
+    formData.append('network', network);
     formData.append('payment', payment);
+    formData.append('paymentMethod', 'Wallet'); // Specify payment method
+    formData.append('paymentRef', 'Wallet');   // Set payment reference
     formData.append('notes', notes);
     
     console.log('Sending order data to Google Sheets:', {
       orderID,
       name,
       number,
-      network,
       bundle,
+      network,
       payment,
       notes
     });
@@ -984,6 +1394,33 @@ function handlePaystackError(error) {
 function getCustomerEmail() {
   // You can implement this to get email from user input or stored data
   return 'customer@daikmedia.com';
+}
+
+// Function to get Paystack public key from Google Apps Script
+async function getPaystackKey() {
+  try {
+    const scriptURL = CONFIG.GOOGLE_SHEETS.SCRIPT_URL;
+    const response = await fetch(`${scriptURL}?action=getPaystackKey`, {
+      method: 'GET'
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.paystackKey) {
+        console.log('✅ Paystack key retrieved successfully');
+        return data.paystackKey;
+      } else {
+        console.error('❌ Paystack key not found in response:', data);
+        return null;
+      }
+    } else {
+      console.error('❌ Failed to get Paystack key:', response.status);
+      return null;
+    }
+  } catch (error) {
+    console.error('❌ Error getting Paystack key:', error);
+    return null;
+  }
 }
 
  
