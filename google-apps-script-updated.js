@@ -390,11 +390,14 @@ function setSecrets() {
 function testOrder() {
   // Test function to simulate an order
   const testData = {
+    action: 'saveOrder',  // ADDED: Required action parameter
     name: 'Test Customer',
     number: '0501234567',
     bundle: '5GB Test Bundle',
     payment: 'GHS 10.00',
-    notes: 'Test order from script'
+    notes: 'Test order from script',
+    network: 'MTN',       // ADDED: Required network parameter
+    paymentRef: 'Test'    // ADDED: Required payment reference
   };
   
   const mockEvent = { parameter: testData };

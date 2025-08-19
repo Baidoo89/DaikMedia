@@ -12,7 +12,7 @@ const CONFIG = {
   
                 // Google Sheets Configuration (Public URL only)
               GOOGLE_SHEETS: {
-                SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzNiUdkjG3-yEAsw26P9RQOMip0C0OHaWaL4osDLUCXx7hivLAsa5nIMLVmLI8raCyoVA/exec'
+                SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbz_yxbCSAt3hXa_JEIXpkmZOlrQBrUz0FaaaDC1zmVu7nA3R-nGZ6dU5q9WyyMJAXB7lA/exec'
               }
 };
 
