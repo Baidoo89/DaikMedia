@@ -6,23 +6,258 @@
   <title>About Us - DAiK MEDIA</title>
   <link rel="stylesheet" href="styles.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  
+  <!-- Firebase Configuration -->
+  <script src="config.js"></script>
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+  
+  <!-- Authentication -->
+  <script src="auth.js"></script>
+  
+  <style>
+    /* User Info and Logout Styling */
+    .user-info {
+      margin-left: auto;
+    }
+    
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 10px 15px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 25px;
+      border: 1px solid #dee2e6;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .user-email {
+      font-size: 14px;
+      font-weight: 500;
+      color: #495057;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    .logout-btn {
+      background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+    }
+    
+    .logout-btn:hover {
+      background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+    }
+    
+    .logout-btn:active {
+      transform: translateY(0);
+    }
+    
+    .logout-btn i {
+      font-size: 12px;
+    }
+    
+    /* Mobile User Info Styling */
+    .mobile-user-info {
+      display: none; /* Hidden on desktop */
+    }
+    
+    .mobile-user-menu {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      margin: 10px 0;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .mobile-user-email {
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+      text-align: center;
+      word-break: break-word;
+      max-width: 250px;
+    }
+    
+    .mobile-logout-btn {
+      background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 25px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+      min-width: 120px;
+      justify-content: center;
+    }
+    
+    .mobile-logout-btn:hover {
+      background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(220, 53, 69, 0.4);
+    }
+    
+    .mobile-logout-btn:active {
+      transform: translateY(0);
+    }
+    
+    .mobile-logout-btn i {
+      font-size: 14px;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .user-menu {
+        flex-direction: column;
+        gap: 10px;
+        padding: 15px;
+        text-align: center;
+      }
+      
+      .user-email {
+        max-width: 150px;
+      }
+      
+      /* Show mobile user info on mobile */
+      .mobile-user-info {
+        display: block;
+      }
+      
+      /* Hide desktop user info on mobile */
+      .user-info {
+        display: none;
+      }
+    }
+  </style>
+  
+  <script>
+    // Check authentication when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if Firebase is properly configured
+      if (typeof firebase === 'undefined') {
+        console.error('❌ Firebase not loaded, redirecting to login');
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      // Check if auth functions are available
+      if (typeof authFunctions === 'undefined') {
+        console.error('❌ Auth functions not loaded, redirecting to login');
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      // Check authentication status
+      checkAuthentication();
+    });
+    
+        // Improved authentication check
+    async function checkAuthentication() {
+        try {
+            // Wait for Firebase auth to be ready
+            console.log('🔍 About: Waiting for Firebase auth to be ready...');
+            const isAuth = await authFunctions.waitForAuth();
+            
+            if (!isAuth) {
+                console.log('❌ User not authenticated, redirecting to login');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // User is authenticated, display user info
+            console.log('✅ User authenticated, displaying user info');
+            displayUserInfo();
+            
+        } catch (error) {
+            console.error('❌ Authentication check failed:', error);
+            // Fallback: redirect to login
+            window.location.href = 'login.html';
+        }
+    }
+    
+    // Display user information (no extra logout injected to avoid duplicates)
+    function displayUserInfo() {
+      try {
+        const currentUser = authFunctions.getCurrentUser();
+        if (currentUser) {
+          console.log('👤 Current user:', currentUser.email);
+          // Logout is handled via the existing nav-menu Logout link
+        } else {
+          console.error('❌ No current user found');
+          window.location.href = 'login.html';
+        }
+      } catch (error) {
+        console.error('❌ Error displaying user info:', error);
+        window.location.href = 'login.html';
+      }
+    }
+    
+    // Logout function
+    async function logout() {
+      try {
+        const result = await authFunctions.signOut();
+        if (result.success) {
+          console.log('✅ User logged out successfully');
+          // Redirect to login page
+          window.location.href = 'login.html';
+        } else {
+          console.error('❌ Logout failed:', result.error);
+          // Force redirect even if logout fails
+          window.location.href = 'login.html';
+        }
+      } catch (error) {
+        console.error('❌ Logout error:', error);
+        // Force redirect even if logout fails
+        window.location.href = 'login.html';
+      }
+    }
+  </script>
 </head>
 <body>
   <!-- Navigation -->
   <nav class="navbar">
     <div class="nav-container">
       <div class="nav-logo">
-        <a href="index.html">
+                        <a href="dashboard.html">
           <i class="fas fa-wifi"></i>
           <span>DAik MEDIA</span>
         </a>
       </div>
       <ul class="nav-menu">
-        <li><a href="index.html" class="nav-link">Home</a></li>
+                    <li><a href="dashboard.html" class="nav-link">Home</a></li>
         <li><a href="services.html" class="nav-link">Services</a></li>
         <li><a href="wallet.html" class="nav-link order-now-nav">Order Now</a></li>
         <li><a href="about.html" class="nav-link active">About</a></li>
         <li><a href="contact.html" class="nav-link">Contact</a></li>
+        <li><a href="#" class="nav-link logout-link" onclick="logout()"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a></li>
       </ul>
       <div class="hamburger">
         <span class="bar"></span>
@@ -102,7 +337,7 @@
         <div class="notice-content">
           <h3>💰 Secure Wallet System for Easy Ordering</h3>
           <p>Our innovative wallet system ensures secure transactions. Load money once and place multiple orders without re-entering payment details. Supports MoMo, Bank Transfer, CashApp, and Card payments.</p>
-          <a href="index.html" class="btn btn-primary">
+          <a href="dashboard.html" class="btn btn-primary">
             <i class="fas fa-arrow-right"></i>
             Experience Our Wallet System
           </a>
@@ -288,6 +523,36 @@
     </div>
   </footer>
 
-  <script src="script.js"></script>
+      <script>
+        // Hamburger menu functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const hamburger = document.querySelector('.hamburger');
+            const navMenu = document.querySelector('.nav-menu');
+            
+            if (hamburger && navMenu) {
+                hamburger.addEventListener('click', function() {
+                    hamburger.classList.toggle('active');
+                    navMenu.classList.toggle('active');
+                });
+                
+                // Close menu when clicking on a link
+                const navLinks = document.querySelectorAll('.nav-link');
+                navLinks.forEach(link => {
+                    link.addEventListener('click', () => {
+                        hamburger.classList.remove('active');
+                        navMenu.classList.remove('active');
+                    });
+                });
+                
+                // Close menu when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!hamburger.contains(e.target) && !navMenu.contains(e.target)) {
+                        hamburger.classList.remove('active');
+                        navMenu.classList.remove('active');
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html> 

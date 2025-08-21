@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daik Media - Login/Signup</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .auth-header {
+            background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .auth-header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .auth-header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        .auth-tabs {
+            display: flex;
+            background: #f8f9fa;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .auth-tab.active {
+            background: white;
+            border-bottom-color: #4285f4;
+            color: #4285f4;
+            font-weight: 600;
+        }
+
+        .auth-content {
+            padding: 40px 30px;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #4285f4;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            margin-left: 10px;
+        }
+
+        .loading.show {
+            display: inline-block;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #c33;
+            display: none;
+        }
+
+        .success-message {
+            background: #efe;
+            color: #363;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #363;
+            display: none;
+        }
+
+        .forgot-password {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .forgot-password a {
+            color: #4285f4;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+
+        .auth-footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .auth-footer a {
+            color: #4285f4;
+            text-decoration: none;
+        }
+
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            .auth-container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .auth-content {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1><i class="fas fa-wallet"></i> Daik Media</h1>
+            <p>Secure Wallet & Data Services</p>
+        </div>
+
+        <div class="auth-tabs">
+            <div class="auth-tab active" onclick="switchTab('login')">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </div>
+            <div class="auth-tab" onclick="switchTab('signup')">
+                <i class="fas fa-user-plus"></i> Sign Up
+            </div>
+        </div>
+
+        <div class="auth-content">
+            <!-- Login Form -->
+            <form class="auth-form active" id="loginForm">
+                <div class="error-message" id="loginError"></div>
+                <div class="success-message" id="loginSuccess"></div>
+                
+                <div class="form-group">
+                    <label for="loginEmail">Email Address</label>
+                    <input type="email" id="loginEmail" required placeholder="Enter your email">
+                </div>
+                
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" required placeholder="Enter your password">
+                </div>
+                
+                <button type="submit" class="submit-btn" id="loginBtn">
+                    <span class="btn-text">Sign In</span>
+                    <span class="loading"><i class="fas fa-spinner fa-spin"></i></span>
+                </button>
+                
+                <div class="forgot-password">
+                    <a href="#" onclick="forgotPassword()">Forgot Password?</a>
+                </div>
+            </form>
+
+            <!-- Signup Form -->
+            <form class="auth-form" id="signupForm">
+                <div class="error-message" id="signupError"></div>
+                <div class="success-message" id="signupSuccess"></div>
+                
+                <div class="form-group">
+                    <label for="signupName">Full Name</label>
+                    <input type="text" id="signupName" required placeholder="Enter your full name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="signupPhone">Phone Number</label>
+                    <input type="tel" id="signupPhone" required placeholder="Enter your phone number">
+                </div>
+                
+                <div class="form-group">
+                    <label for="signupEmail">Email Address</label>
+                    <input type="email" id="signupEmail" required placeholder="Enter your email">
+                </div>
+                
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" required placeholder="Create a password">
+                </div>
+                
+                <div class="form-group">
+                    <label for="signupConfirmPassword">Confirm Password</label>
+                    <input type="password" id="signupConfirmPassword" required placeholder="Confirm your password">
+                </div>
+                
+                <button type="submit" class="submit-btn" id="signupBtn">
+                    <span class="btn-text">Create Account</span>
+                    <span class="loading"><i class="fas fa-spinner fa-spin"></i></span>
+                </button>
+            </form>
+        </div>
+
+        <div class="auth-footer">
+            <p>By continuing, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></p>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        // Tab switching
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update forms
+            document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+            document.getElementById(tabName + 'Form').classList.add('active');
+            
+            // Clear messages
+            clearMessages();
+        }
+
+        // Clear error/success messages
+        function clearMessages() {
+            document.querySelectorAll('.error-message, .success-message').forEach(msg => {
+                msg.style.display = 'none';
+                msg.textContent = '';
+            });
+        }
+
+        // Show message
+        function showMessage(type, message, formId) {
+            const messageElement = document.getElementById(formId + type.charAt(0).toUpperCase() + type.slice(1));
+            messageElement.textContent = message;
+            messageElement.style.display = 'block';
+        }
+
+        // Loading state
+        function setLoading(buttonId, loading) {
+            const button = document.getElementById(buttonId);
+            const btnText = button.querySelector('.btn-text');
+            const loadingSpinner = button.querySelector('.loading');
+            
+            if (loading) {
+                btnText.style.display = 'none';
+                loadingSpinner.classList.add('show');
+                button.disabled = true;
+            } else {
+                btnText.style.display = 'inline';
+                loadingSpinner.classList.remove('show');
+                button.disabled = false;
+            }
+        }
+
+        // Login form submission
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            console.log('🔐 Login attempt for:', email);
+            
+            setLoading('loginBtn', true);
+            clearMessages();
+            
+            try {
+                console.log('📞 Calling authFunctions.signIn...');
+                const result = await authFunctions.signIn(email, password);
+                console.log('📥 SignIn result:', result);
+                
+                if (result.success) {
+                    console.log('✅ Login successful, redirecting immediately');
+                    showMessage('success', 'Login successful! Redirecting...', 'login');
+                    
+                    // Redirect after successful login with longer delay for auth state to update
+                    setTimeout(() => {
+                        console.log('🚀 Redirecting to dashboard...');
+                        window.location.href = 'dashboard.html';
+                    }, 2000);
+                } else {
+                    console.log('❌ Login failed:', result.error);
+                    showMessage('error', result.error, 'login');
+                }
+            } catch (error) {
+                console.error('💥 Login error:', error);
+                showMessage('error', error.message, 'login');
+            } finally {
+                setLoading('loginBtn', false);
+            }
+        });
+
+        // Signup form submission
+        document.getElementById('signupForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('signupName').value;
+            const phone = document.getElementById('signupPhone').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('signupConfirmPassword').value;
+            
+            // Validation
+            if (password !== confirmPassword) {
+                showMessage('error', 'Passwords do not match', 'signup');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showMessage('error', 'Password must be at least 6 characters', 'signup');
+                return;
+            }
+            
+            setLoading('signupBtn', true);
+            clearMessages();
+            
+            try {
+                const result = await authFunctions.signUp(email, password, name, phone);
+                
+                if (result.success) {
+                    showMessage('success', 'Account created successfully! Redirecting to dashboard...', 'signup');
+                    // Redirect to dashboard after successful signup with longer delay
+                    setTimeout(() => {
+                        console.log('🚀 Redirecting to dashboard after signup...');
+                        window.location.href = 'dashboard.html';
+                    }, 2500);
+                } else {
+                    showMessage('error', result.error, 'signup');
+                }
+            } catch (error) {
+                showMessage('error', error.message, 'signup');
+            } finally {
+                setLoading('signupBtn', false);
+            }
+        });
+
+        // Forgot password function
+        async function forgotPassword() {
+            const email = document.getElementById('loginEmail').value;
+            if (!email) {
+                showMessage('error', 'Please enter your email address first', 'login');
+                return;
+            }
+            
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showMessage('error', 'Please enter a valid email address', 'login');
+                return;
+            }
+            
+            try {
+                setLoading('loginBtn', true);
+                clearMessages();
+                
+                const result = await authFunctions.sendPasswordResetEmail(email);
+                
+                if (result.success) {
+                    showMessage('success', 'Password reset link sent to your email! Check your inbox and spam folder.', 'login');
+                } else {
+                    showMessage('error', 'Failed to send reset email: ' + result.error, 'login');
+                }
+            } catch (error) {
+                console.error('❌ Password reset error:', error);
+                showMessage('error', 'An error occurred while sending reset email. Please try again.', 'login');
+            } finally {
+                setLoading('loginBtn', false);
+            }
+        }
+
+        // No auto-redirect from login page - user must actively login
+        console.log('🔐 Login page loaded - user must authenticate');
+    </script>
+</body>
+</html>

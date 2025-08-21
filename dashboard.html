@@ -1,239 +1,651 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Order Dashboard - DAIK MEDIA </title>
-  <link rel="stylesheet" href="styles.css">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daik Media - Data Packages & Mobile Solutions</title>
+    <meta name="description" content="Premium data packages for MTN, Telecel & AirtelTigo networks in Ghana. Fast, reliable, and affordable mobile data solutions with instant activation.">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Firebase Configuration -->
+    <script src="config.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Authentication Check -->
+    <script src="auth.js"></script>
+    
+    <!-- Homepage Enhancements -->
+    <script src="homepage.js"></script>
+    <style>
+        /* User Info and Logout Styling */
+        .user-info {
+            margin-left: auto;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px 15px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 25px;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .user-email {
+            font-size: 14px;
+            font-weight: 500;
+            color: #495057;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .logout-btn {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+        }
+        
+        .logout-btn:hover {
+            background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+        }
+        
+        .logout-btn:active {
+            transform: translateY(0);
+        }
+        
+        .logout-btn i {
+            font-size: 12px;
+        }
+        
+        /* Mobile User Info Styling */
+        .mobile-user-info {
+            display: none; /* Hidden on desktop */
+        }
+        
+        .mobile-user-menu {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            margin: 10px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .mobile-user-email {
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            text-align: center;
+            word-break: break-word;
+            max-width: 250px;
+        }
+        
+        .mobile-logout-btn {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+            min-width: 120px;
+            justify-content: center;
+        }
+        
+        .mobile-logout-btn:hover {
+            background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(220, 53, 69, 0.4);
+        }
+        
+        .mobile-logout-btn:active {
+            transform: translateY(0);
+        }
+        
+        .mobile-logout-btn i {
+            font-size: 14px;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .user-menu {
+                flex-direction: column;
+                gap: 10px;
+                padding: 15px;
+                text-align: center;
+            }
+            
+            .user-email {
+                max-width: 150px;
+            }
+            
+            /* Show mobile user info on mobile */
+            .mobile-user-info {
+                display: block;
+            }
+            
+            /* Hide desktop user info on mobile */
+            .user-info {
+                display: none;
+            }
+        }
+    </style>
+    <script>
+        // Check authentication before loading page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if Firebase is properly configured
+            if (typeof firebase === 'undefined') {
+                console.error('❌ Firebase not loaded, redirecting to login');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Check if auth functions are available
+            if (typeof authFunctions === 'undefined') {
+                console.error('❌ Auth functions not loaded, redirecting to login');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Check authentication status
+            checkAuthentication();
+            
+            // Initialize hamburger menu (guard against double init)
+            if (!window.__HAMBURGER_INIT__){
+                initializeHamburgerMenu();
+                window.__HAMBURGER_INIT__ = true;
+            }
+        });
+        
+            // Improved authentication check
+    async function checkAuthentication() {
+        try {
+            // Wait for Firebase auth to be ready
+            console.log('🔍 Dashboard: Waiting for Firebase auth to be ready...');
+            const isAuth = await authFunctions.waitForAuth();
+            
+            if (!isAuth) {
+                console.log('❌ Dashboard: User not authenticated, redirecting to login');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // User is authenticated, load the dashboard
+            console.log('✅ Dashboard: User authenticated, loading dashboard');
+            displayUserInfo();
+            
+        } catch (error) {
+            console.error('❌ Authentication check failed:', error);
+            // Fallback: redirect to login
+            window.location.href = 'login.html';
+        }
+    }
+        
+        // Display user information (no extra logout injected to avoid duplicates)
+        function displayUserInfo() {
+            try {
+                const currentUser = authFunctions.getCurrentUser();
+                if (currentUser) {
+                    console.log('👤 Current user:', currentUser.email);
+                    // Logout is handled via the existing nav-menu Logout link
+                } else {
+                    console.error('❌ No current user found');
+                    window.location.href = 'login.html';
+                }
+            } catch (error) {
+                console.error('❌ Error displaying user info:', error);
+                window.location.href = 'login.html';
+            }
+        }
+        
+        // Logout function
+        async function logout() {
+            try {
+                const result = await authFunctions.signOut();
+                if (result.success) {
+                    console.log('✅ User logged out successfully');
+                    // Redirect to login page
+                    window.location.href = 'login.html';
+                } else {
+                    console.error('❌ Logout failed:', result.error);
+                    // Force redirect even if logout fails
+                    window.location.href = 'login.html';
+                }
+            } catch (error) {
+                console.error('❌ Logout error:', error);
+                // Force redirect even if logout fails
+                window.location.href = 'login.html';
+            }
+        }
+        
+        // Hamburger menu functionality
+        function initializeHamburgerMenu() {
+            const hamburger = document.querySelector('.hamburger');
+            const navMenu = document.querySelector('.nav-menu');
+            
+            if (hamburger && navMenu) {
+                hamburger.addEventListener('click', function() {
+                    hamburger.classList.toggle('active');
+                    navMenu.classList.toggle('active');
+                });
+                
+                // Close menu when clicking on a link
+                const navLinks = document.querySelectorAll('.nav-link');
+                navLinks.forEach(link => {
+                    link.addEventListener('click', () => {
+                        hamburger.classList.remove('active');
+                        navMenu.classList.remove('active');
+                    });
+                });
+                
+                // Close menu when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!hamburger.contains(e.target) && !navMenu.contains(e.target)) {
+                        hamburger.classList.remove('active');
+                        navMenu.classList.remove('active');
+                    }
+                }, { capture: true });
+            }
+        }
+    </script>
 </head>
 <body>
-  <!-- Navigation -->
-  <nav class="navbar">
-    <div class="nav-container">
-      <div class="nav-logo">
-        <a href="homepage.html">
-          <i class="fas fa-wifi"></i>
-          <span>DAIK MEDIA</span>
-        </a>
-      </div>
-      <ul class="nav-menu">
-        <li><a href="homepage.html" class="nav-link">Home</a></li>
-        <li><a href="services.html" class="nav-link">Services</a></li>
-        <li><a href="dashboard.html" class="nav-link active">Dashboard</a></li>
-        <li><a href="about.html" class="nav-link">About</a></li>
-        <li><a href="contact.html" class="nav-link">Contact</a></li>
-      </ul>
-      <div class="hamburger">
-        <span class="bar"></span>
-        <span class="bar"></span>
-        <span class="bar"></span>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Dashboard Header -->
-  <section class="dashboard-header">
-    <div class="container">
-      <h1>Order Dashboard</h1>
-      <p>Select your preferred network and data package to get started</p>
-    </div>
-  </section>
-
-  <!-- Network Selection -->
-  <section class="network-selection">
-    <div class="container">
-      <div class="network-cards">
-        <div class="network-card" data-network="mtn">
-          <div class="network-icon">
-            <i class="fas fa-signal"></i>
-          </div>
-          <h3>MTN</h3>
-          <p>Fast & Reliable</p>
-          <div class="network-status">
-            <span class="status-dot active"></span>
-            Available
-          </div>
-        </div>
-        
-        <div class="network-card" data-network="vodafone">
-          <div class="network-icon">
-            <i class="fas fa-mobile-alt"></i>
-          </div>
-          <h3>Vodafone</h3>
-          <p>High Speed</p>
-          <div class="network-status">
-            <span class="status-dot active"></span>
-            Available
-          </div>
-        </div>
-        
-        <div class="network-card" data-network="airteltigo">
-          <div class="network-icon">
-            <i class="fas fa-wifi"></i>
-          </div>
-          <h3>AirtelTigo</h3>
-          <p>Affordable</p>
-          <div class="network-status">
-            <span class="status-dot active"></span>
-            Available
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Order Form Section -->
-  <section class="order-section">
-    <div class="container">
-      <div class="order-container">
-        <!-- Package Display -->
-        <div class="package-display">
-          <h2>Available Packages</h2>
-          <div class="package-list" id="packageList">
-            <!-- Packages will be loaded here based on network selection -->
-          </div>
-        </div>
-
-        <!-- Order Form -->
-        <div class="order-form-container">
-          <div class="form-header">
-            <h2>Place Your Order</h2>
-            <p>Fill in your details to complete your order</p>
-          </div>
-          
-          <form id="orderForm" class="order-form">
-            <div class="form-group">
-              <label for="name">👤 Full Name</label>
-              <input type="text" id="name" required placeholder="Enter your full name">
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h2>DAiK MEDIA</h2>
             </div>
-
-            <div class="form-group">
-              <label for="number">📞 Phone Number</label>
-              <input type="tel" id="number" required placeholder="e.g., 233244123456">
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="dashboard.html" class="nav-link active">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="services.html" class="nav-link">Services</a>
+                </li>
+                <li class="nav-item">
+                    <a href="wallet.html" class="nav-link">Wallet</a>
+                </li>
+                <li class="nav-item">
+                    <a href="about.html" class="nav-link">About</a>
+                </li>
+                <li class="nav-item">
+                    <a href="contact.html" class="nav-link">Contact</a>
+                </li>
+                <li class="nav-item">
+                    <a href="wallet.html" class="nav-link order-now-nav">Order Now</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link logout-link" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
             </div>
-
-            <div class="form-group">
-              <label for="bundle">📦 Data Bundle</label>
-              <select id="bundle" required>
-                <option value="">-- Select your preferred bundle --</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="payment">💳 Payment Method</label>
-              <select id="payment" required>
-                <option value="">-- Choose payment method --</option>
-                <option value="MoMo">MoMo</option>
-                <option value="Bank Transfer">Bank Transfer</option>
-                <option value="CashApp">CashApp</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="notes">📝 Additional Notes (Optional)</label>
-              <textarea id="notes" placeholder="Any special instructions or requests..."></textarea>
-            </div>
-
-            <button type="submit" class="submit-btn">
-              <span class="btn-text">🚀 Submit Order</span>
-              <span class="loading" style="display: none;"></span>
-            </button>
-          </form>
         </div>
-      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">Fast & Reliable Data Packages</h1>
+                <p class="hero-subtitle">Premium data packages for MTN, Telecel & AirtelTigo networks. Lightning-fast activation with 24/7 customer support.</p>
+                <div class="hero-buttons">
+                    <a href="wallet.html" class="btn btn-primary btn-large">Order Data Now</a>
+                    <a href="services.html" class="btn btn-secondary btn-large">View Packages</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="hero-card">
+                    <div class="network-icons">
+                        <div class="network-icon mtn">
+                            <div class="icon-wrapper">
+                                <i class="fas fa-signal"></i>
+                            </div>
+                            <span class="network-name">MTN</span>
+                            <span class="network-tag">Premium</span>
+                        </div>
+                        <div class="network-icon telecel">
+                            <div class="icon-wrapper">
+                                <i class="fas fa-mobile-alt"></i>
+                            </div>
+                            <span class="network-name">Telecel</span>
+                            <span class="network-tag">High-Speed</span>
+                        </div>
+                        <div class="network-icon airteltigo">
+                            <div class="icon-wrapper">
+                                <i class="fas fa-wifi"></i>
+                            </div>
+                            <span class="network-name">AirtelTigo</span>
+                            <span class="network-tag">Affordable</span>
+                        </div>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="stat">
+                            <span class="stat-number">500+</span>
+                            <span class="stat-label">Happy Customers</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">24/7</span>
+                            <span class="stat-label">Support</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">Instant</span>
+                            <span class="stat-label">Activation</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">Why Choose Daik Media?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3>Instant Activation</h3>
+                    <p>Get your data activated within minutes of payment confirmation.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Secure Payments</h3>
+                    <p>Multiple payment options including Mobile Money, Bank Transfer, and Cards.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <h3>24/7 Support</h3>
+                    <p>Round-the-clock customer support via WhatsApp and Telegram.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-tags"></i>
+                    </div>
+                    <h3>Best Prices</h3>
+                    <p>Competitive prices with regular promotions and bundle deals.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Business Hours Section -->
+    <section class="business-hours">
+        <div class="container">
+            <h2 class="section-title">Business Hours</h2>
+            <div class="hours-container">
+                <div class="hours-card">
+                    <div class="hours-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="hours-content">
+                        <h3>Monday - Saturday</h3>
+                        <div class="time-schedule">
+                            <div class="time-row">
+                                <span class="day">Monday</span>
+                                <span class="time">7:30 AM - 8:30 PM</span>
+                            </div>
+                            <div class="time-row">
+                                <span class="day">Tuesday</span>
+                                <span class="time">7:30 AM - 8:30 PM</span>
+                            </div>
+                            <div class="time-row">
+                                <span class="day">Wednesday</span>
+                                <span class="time">7:30 AM - 8:30 PM</span>
+                            </div>
+                            <div class="time-row">
+                                <span class="day">Thursday</span>
+                                <span class="time">7:30 AM - 8:30 PM</span>
+                            </div>
+                            <div class="time-row">
+                                <span class="day">Friday</span>
+                                <span class="time">7:30 AM - 8:30 PM</span>
+                            </div>
+                            <div class="time-row">
+                                <span class="day">Saturday</span>
+                                <span class="time">7:30 AM - 8:30 PM</span>
+                            </div>
+                            <div class="time-row sunday">
+                                <span class="day">Sunday</span>
+                                <span class="time">Closed</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Popular Packages Section -->
+    <section class="popular-packages">
+        <div class="container">
+            <h2 class="section-title">Featured Data Packages</h2>
+            <p class="section-subtitle">Our most popular bundles across all networks</p>
+            <div class="packages-grid">
+                <div class="package-card" data-network="mtn">
+                    <div class="package-header mtn">
+                        <div class="network-badge">MTN</div>
+                        <h3>4GB Data Bundle</h3>
+                        <span class="package-price">₵20.50</span>
+                    </div>
+                    <div class="package-features">
+                        <p><i class="fas fa-check"></i> 30 Days Validity</p>
+                        <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+                        <p><i class="fas fa-check"></i> Night Bonus</p>
+                    </div>
+                    <a href="wallet.html?bundle=4GB&price=20.50&network=MTN" class="btn btn-primary">Order Now</a>
+                </div>
+                <div class="package-card" data-network="telecel">
+                    <div class="package-header telecel">
+                        <div class="network-badge">Telecel</div>
+                        <h3>10GB Data Bundle</h3>
+                        <span class="package-price">₵52.00</span>
+                    </div>
+                    <div class="package-features">
+                        <p><i class="fas fa-check"></i> 30 Days Validity</p>
+                        <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+                        <p><i class="fas fa-check"></i> Social Media Bonus</p>
+                    </div>
+                    <a href="wallet.html?bundle=10GB&price=52&network=Telecel" class="btn btn-primary">Order Now</a>
+                </div>
+                <div class="package-card" data-network="airteltigo">
+                    <div class="package-header airteltigo">
+                        <div class="network-badge">AirtelTigo</div>
+                        <h3>15GB Data Bundle</h3>
+                        <span class="package-price">₵60.50</span>
+                    </div>
+                    <div class="package-features">
+                        <p><i class="fas fa-check"></i> 30 Days Validity</p>
+                        <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+                        <p><i class="fas fa-check"></i> WhatsApp Free</p>
+                    </div>
+                    <a href="wallet.html?bundle=15GB&price=60.5&network=AirtelTigo" class="btn btn-primary">Order Now</a>
+                </div>
+            </div>
+            <div class="text-center">
+                <a href="services.html" class="btn btn-secondary">View All Packages</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Ready to Get Started?</h2>
+                <p>Join thousands of satisfied customers who trust Daik Media for their data needs.</p>
+                <div class="cta-buttons">
+                    <button onclick="openQuickOrderModal()" class="btn btn-primary btn-large">Quick Order Now</button>
+                    <a href="wallet.html" class="btn btn-secondary btn-large">Full Wallet System</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Order Modal -->
+    <div id="quickOrderModal" class="modal">
+        <div class="modal-content quick-order-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-bolt"></i> Quick Data Order</h2>
+                <span class="close" onclick="closeQuickOrderModal()">&times;</span>
+            </div>
+            
+            <form id="quickOrderForm" class="quick-order-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="quickName">👤 Full Name *</label>
+                        <input type="text" id="quickName" required placeholder="Enter your full name">
+                    </div>
+                    <div class="form-group">
+                        <label for="quickNumber">📞 Phone Number *</label>
+                        <input type="tel" id="quickNumber" required placeholder="e.g., 233244123456">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="quickNetwork">🌐 Network *</label>
+                        <select id="quickNetwork" required onchange="updateQuickBundles()">
+                            <option value="">-- Select Network --</option>
+                            <option value="MTN">MTN</option>
+                            <option value="Telecel">Telecel</option>
+                            <option value="AirtelTigo">AirtelTigo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="quickBundle">📦 Data Bundle *</label>
+                        <select id="quickBundle" required>
+                            <option value="">-- Select Network First --</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="quickPayment">💳 Payment Method *</label>
+                        <select id="quickPayment" required>
+                            <option value="">-- Select Payment --</option>
+                            <option value="Mobile Money">Mobile Money</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="CashApp">CashApp</option>
+                            <option value="Card">Card Payment</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="quickNotes">📝 Additional Notes</label>
+                        <textarea id="quickNotes" placeholder="Any special instructions..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="order-summary" id="quickOrderSummary" style="display: none;">
+                    <h3>Order Summary</h3>
+                    <div class="summary-item">
+                        <span>Bundle:</span>
+                        <span id="quickBundleSummary">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Network:</span>
+                        <span id="quickNetworkSummary">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Payment:</span>
+                        <span id="quickPaymentSummary">-</span>
+                    </div>
+                    <div class="summary-item total">
+                        <span>Total Cost:</span>
+                        <span id="quickCostSummary">-</span>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-large" id="quickSubmitBtn">
+                        <span class="btn-text">🚀 Place Order</span>
+                        <span class="loading" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i> Processing...
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-  </section>
 
-  <!-- Quick Stats -->
-  <section class="quick-stats">
-    <div class="container">
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-icon">
-            <i class="fas fa-users"></i>
-          </div>
-          <div class="stat-content">
-            <h3>10,000+</h3>
-            <p>Happy Customers</p>
-          </div>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Daik Media</h3>
+                    <p>Your trusted partner for reliable data packages and mobile solutions in Ghana.</p>
+                    <div class="social-links">
+                        <a href="https://t.me/DaikMedia" target="_blank"><i class="fab fa-telegram"></i></a>
+                        <a href="https://wa.me/233557574477" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="dashboard.html">Home</a></li>
+                        <li><a href="services.html">Services</a></li>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact Info</h4>
+                    <p><i class="fas fa-phone"></i> +233531257913</p>
+                    <p><i class="fas fa-envelope"></i> sendtonnimdee@gmail.com</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Accra, Ghana</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 TeCh Dalt. All rights reserved.</p>
+            </div>
         </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">
-            <i class="fas fa-clock"></i>
-          </div>
-          <div class="stat-content">
-            <h3>10-30 Min</h3>
-            <p>Delivery Time</p>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">
-            <i class="fas fa-star"></i>
-          </div>
-          <div class="stat-content">
-            <h3>4.9/5</h3>
-            <p>Customer Rating</p>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">
-            <i class="fas fa-headset"></i>
-          </div>
-          <div class="stat-content">
-            <h3>24/7</h3>
-            <p>Support Available</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+    </footer>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="container">
-      <div class="footer-content">
-        <div class="footer-section">
-          <h3>DAIK MEDIA</h3>
-          <p>Your trusted partner for fast and reliable data services in Ghana.</p>
-          <div class="social-links">
-            <a href="#"><i class="fab fa-whatsapp"></i></a>
-            <a href="#"><i class="fab fa-telegram"></i></a>
-            <a href="#"><i class="fab fa-facebook"></i></a>
-          </div>
-        </div>
-        <div class="footer-section">
-          <h4>Services</h4>
-          <ul>
-            <li><a href="services.html#mtn">MTN Data</a></li>
-            <li><a href="services.html#vodafone">Vodafone Data</a></li>
-            <li><a href="services.html#airteltigo">AirtelTigo Data</a></li>
-          </ul>
-        </div>
-        <div class="footer-section">
-          <h4>Support</h4>
-          <ul>
-            <li><a href="contact.html">Contact Us</a></li>
-            <li><a href="#">FAQ</a></li>
-            <li><a href="#">Help Center</a></li>
-          </ul>
-        </div>
-        <div class="footer-section">
-          <h4>Contact Info</h4>
-          <p><i class="fas fa-phone"></i> +233 557 574 477</p>
-          <p><i class="fas fa-envelope"></i> info@daikmedia.com</p>
-          <p><i class="fas fa-map-marker-alt"></i> Accra, Ghana</p>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <p>&copy; 2024 Daik Media. All rights reserved.</p>
-      </div>
-    </div>
-  </footer>
-
-  <script src="script.js"></script>
 </body>
-</html> 
+</html>

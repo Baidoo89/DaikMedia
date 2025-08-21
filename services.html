@@ -6,23 +6,367 @@
   <title>Data Services - Daik Media</title>
   <link rel="stylesheet" href="styles.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  
+  <!-- Firebase Configuration -->
+  <script src="config.js"></script>
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+  
+  <!-- Authentication -->
+  <script src="auth.js"></script>
+  
+  <style>
+    /* User Info and Logout Styling */
+    .user-info {
+      margin-left: auto;
+    }
+    
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 10px 15px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 25px;
+      border: 1px solid #dee2e6;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .user-email {
+      font-size: 14px;
+      font-weight: 500;
+      color: #495057;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    .logout-btn {
+      background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+    }
+    
+    .logout-btn:hover {
+      background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+    }
+    
+    .logout-btn:active {
+      transform: translateY(0);
+    }
+    
+    .logout-btn i {
+      font-size: 12px;
+    }
+    
+    /* Mobile User Info Styling */
+    .mobile-user-info {
+      display: none; /* Hidden on desktop */
+    }
+    
+    .mobile-user-menu {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      margin: 10px 0;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .mobile-user-email {
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+      text-align: center;
+      word-break: break-word;
+      max-width: 250px;
+    }
+    
+    .mobile-logout-btn {
+      background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 25px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+      min-width: 120px;
+      justify-content: center;
+    }
+    
+    .mobile-logout-btn:hover {
+      background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(220, 53, 69, 0.4);
+    }
+    
+    .mobile-logout-btn:active {
+      transform: translateY(0);
+    }
+    
+    .mobile-logout-btn i {
+      font-size: 14px;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .user-menu {
+        flex-direction: column;
+        gap: 10px;
+        padding: 15px;
+        text-align: center;
+      }
+      
+      .user-email {
+        max-width: 150px;
+      }
+      
+      /* Show mobile user info on mobile */
+      .mobile-user-info {
+        display: block;
+      }
+      
+      /* Hide desktop user info on mobile */
+      .user-info {
+        display: none;
+      }
+    }
+  </style>
+  
+  <script>
+    // Check authentication when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if Firebase is properly configured
+      if (typeof firebase === 'undefined') {
+        console.error('❌ Firebase not loaded, redirecting to login');
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      // Check if auth functions are available
+      if (typeof authFunctions === 'undefined') {
+        console.error('❌ Auth functions not loaded, redirecting to login');
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      // Check authentication status
+      checkAuthentication();
+      
+      // Initialize tab switching
+      initializeTabSwitching();
+      
+      // Initialize hamburger menu
+      initializeHamburgerMenu();
+    });
+    
+        // Improved authentication check
+    async function checkAuthentication() {
+        try {
+            // Wait for Firebase auth to be ready
+            const isAuth = await authFunctions.waitForAuth();
+            
+            if (!isAuth) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // User is authenticated, display user info
+            displayUserInfo();
+            
+        } catch (error) {
+            console.error('❌ Authentication check failed:', error);
+            // Fallback: redirect to login
+            window.location.href = 'login.html';
+        }
+    }
+    
+    // Display user information (no extra logout injected to avoid duplicates)
+    function displayUserInfo() {
+      try {
+        const currentUser = authFunctions.getCurrentUser();
+        if (currentUser) {
+          // Logout is handled via the existing nav-menu Logout link
+          return;
+        } else {
+          window.location.href = 'login.html';
+        }
+      } catch (error) {
+        console.error('❌ Error displaying user info:', error);
+        window.location.href = 'login.html';
+      }
+    }
+    
+    // Logout function
+    async function logout() {
+      try {
+        const result = await authFunctions.signOut();
+        if (result.success) {
+          // Redirect to login page
+          window.location.href = 'login.html';
+        } else {
+          console.error('❌ Logout failed:', result.error);
+          // Force redirect even if logout fails
+          window.location.href = 'login.html';
+        }
+      } catch (error) {
+        console.error('❌ Logout error:', error);
+        // Force redirect even if logout fails
+        window.location.href = 'login.html';
+      }
+    }
+    
+    // Network card switching functionality
+    function initializeTabSwitching() {
+      try {
+        const networkCards = document.querySelectorAll('.network-card');
+        const networkPackages = document.querySelectorAll('.network-packages');
+        
+        // Add click event listeners to network cards
+        networkCards.forEach((card) => {
+          // Add both click and touch events for better mobile support
+          const handleNetworkSwitch = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const network = this.getAttribute('data-network');
+            
+            // Update active network card
+            networkCards.forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update status badges
+            networkCards.forEach(c => {
+              const statusBadge = c.querySelector('.status-badge');
+              if (statusBadge) {
+                statusBadge.textContent = 'Available';
+                statusBadge.classList.remove('active');
+              }
+            });
+            
+            // Set current card as active
+            const currentStatusBadge = this.querySelector('.status-badge');
+            if (currentStatusBadge) {
+              currentStatusBadge.textContent = 'Active';
+              currentStatusBadge.classList.add('active');
+            }
+            
+            // Show corresponding network packages
+            networkPackages.forEach(package => {
+              const packageNetwork = package.getAttribute('data-network');
+              
+              if (packageNetwork === network) {
+                package.classList.add('active');
+                
+                // Scroll to packages on mobile for better UX
+                if (window.innerWidth <= 768) {
+                  package.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              } else {
+                package.classList.remove('active');
+              }
+            });
+          };
+          
+          // Add click event
+          card.addEventListener('click', handleNetworkSwitch);
+          
+          // Add touch event for mobile
+          card.addEventListener('touchend', handleNetworkSwitch);
+        });
+        
+        // Initialize with MTN active (default)
+        const mtnSection = document.querySelector('#mtn');
+        if (mtnSection) {
+          mtnSection.classList.add('active');
+          mtnSection.style.display = 'block';
+          
+          // Ensure it's visible on mobile
+          if (window.innerWidth <= 768) {
+            mtnSection.style.display = 'block';
+          }
+        }
+        
+      } catch (error) {
+        console.error('❌ Error setting up network card switching:', error);
+      }
+    }
+    
+    // Hamburger menu functionality
+    function initializeHamburgerMenu() {
+      const hamburger = document.querySelector('.hamburger');
+      const navMenu = document.querySelector('.nav-menu');
+      
+      if (hamburger && navMenu) {
+        hamburger.addEventListener('click', function() {
+          hamburger.classList.toggle('active');
+          navMenu.classList.toggle('active');
+        });
+        
+        // Close menu when clicking on a link
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+          link.addEventListener('click', () => {
+            hamburger.classList.remove('active');
+            navMenu.classList.remove('active');
+          });
+        });
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+          if (!hamburger.contains(e.target) && !navMenu.contains(e.target)) {
+            hamburger.classList.remove('active');
+            navMenu.classList.remove('active');
+          }
+        });
+      }
+    }
+  </script>
 </head>
 <body>
   <!-- Navigation -->
   <nav class="navbar">
     <div class="nav-container">
       <div class="nav-logo">
-        <a href="index.html">
+                        <a href="dashboard.html">
           <i class="fas fa-wifi"></i>
           <span>Daik Media</span>
         </a>
       </div>
       <ul class="nav-menu">
-        <li><a href="index.html" class="nav-link">Home</a></li>
+                    <li><a href="dashboard.html" class="nav-link">Home</a></li>
         <li><a href="services.html" class="nav-link active">Services</a></li>
         <li><a href="wallet.html" class="nav-link order-now-nav">Order Now</a></li>
         <li><a href="about.html" class="nav-link">About</a></li>
         <li><a href="contact.html" class="nav-link">Contact</a></li>
+        <li><a href="#" class="nav-link logout-link" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+        </a></li>
       </ul>
       <div class="hamburger">
         <span class="bar"></span>
@@ -62,22 +406,85 @@
   <!-- Network Tabs -->
   <section class="network-tabs">
     <div class="container">
-      <div class="tab-buttons">
-        <button class="tab-btn active" data-network="mtn">
-          <i class="fas fa-signal"></i>
-          MTN Data
-        </button>
-        <button class="tab-btn" data-network="telecel">
-          <i class="fas fa-mobile-alt"></i>
-          Telecel Data
-        </button>
-        <button class="tab-btn" data-network="airteltigo">
-          <i class="fas fa-wifi"></i>
-          AirtelTigo Data
-        </button>
+      <div class="network-header-section">
+        <h2 class="section-title">Choose Your Network</h2>
+        <p class="section-subtitle">Select your preferred network to view available data packages</p>
+        
+        <div class="network-cards">
+          <div class="network-card active" data-network="mtn">
+            <div class="network-card-header">
+              <div class="network-icon mtn-icon">
+                <i class="fas fa-signal"></i>
+              </div>
+              <div class="network-info">
+                <h3>MTN</h3>
+                <p>Fast & Reliable</p>
+                <span class="package-count">14 Packages</span>
+              </div>
+              <div class="network-status">
+                <span class="status-badge active">Active</span>
+              </div>
+            </div>
+            <div class="network-card-body">
+              <div class="network-features">
+                <span class="feature-tag">4G/LTE</span>
+                <span class="feature-tag">Nationwide</span>
+                <span class="feature-tag">Night Bonus</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="network-card" data-network="telecel">
+            <div class="network-card-header">
+              <div class="network-icon telecel-icon">
+                <i class="fas fa-mobile-alt"></i>
+              </div>
+              <div class="network-info">
+                <h3>Telecel</h3>
+                <p>High Speed</p>
+                <span class="package-count">8 Packages</span>
+              </div>
+              <div class="network-status">
+                <span class="status-badge">Available</span>
+              </div>
+            </div>
+            <div class="network-card-body">
+              <div class="network-features">
+                <span class="feature-tag">4G/LTE</span>
+                <span class="feature-tag">Excellent Coverage</span>
+                <span class="feature-tag">Social Bonus</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="network-card" data-network="airteltigo">
+            <div class="network-card-header">
+              <div class="network-icon airteltigo-icon">
+                <i class="fas fa-wifi"></i>
+              </div>
+              <div class="network-info">
+                <h3>AirtelTigo</h3>
+                <p>Affordable</p>
+                <span class="package-count">19 Packages</span>
+              </div>
+              <div class="network-status">
+                <span class="status-badge">Available</span>
+              </div>
+            </div>
+            <div class="network-card-body">
+              <div class="network-features">
+                <span class="feature-tag">4G/LTE</span>
+                <span class="feature-tag">WhatsApp Free</span>
+                <span class="feature-tag">Budget Friendly</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
+
+
 
   <!-- MTN Data Packages -->
   <section id="mtn" class="network-packages active" data-network="mtn">
@@ -87,46 +494,46 @@
         <p>Fast and reliable MTN data bundles with nationwide coverage</p>
       </div>
       <div class="packages-grid">
-        <div class="package-card">
+        <div class="package-card" data-network="mtn">
           <div class="package-header">
             <h3>1GB</h3>
             <div class="price">GH₵5.50</div>
           </div>
           <div class="package-features">
-            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 7 Days Validity</p>
             <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
             <p><i class="fas fa-check"></i> Night Bonus</p>
           </div>
-          <a href="wallet.html?bundle=1GB&price=5.50&network=MTN" class="btn btn-primary order-btn">Order Now</a>
+                                          <a href="wallet.html" class="btn btn-primary order-btn">Order Now</a>
         </div>
 
-        <div class="package-card">
+        <div class="package-card" data-network="mtn">
           <div class="package-header">
             <h3>2GB</h3>
             <div class="price">GH₵10.50</div>
           </div>
           <div class="package-features">
-            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 7 Days Validity</p>
             <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
             <p><i class="fas fa-check"></i> Night Bonus</p>
           </div>
-          <a href="wallet.html?bundle=2GB&price=10.50&network=MTN" class="btn btn-primary order-btn">Order Now</a>
+                                          <a href="wallet.html" class="btn btn-primary order-btn">Order Now</a>
         </div>
 
-        <div class="package-card">
+        <div class="package-card" data-network="mtn">
           <div class="package-header">
             <h3>3GB</h3>
             <div class="price">GH₵15.50</div>
           </div>
           <div class="package-features">
-            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 7 Days Validity</p>
             <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
             <p><i class="fas fa-check"></i> Night Bonus</p>
           </div>
           <a href="wallet.html?bundle=3GB&price=15.50&network=MTN" class="btn btn-primary order-btn">Order Now</a>
         </div>
 
-        <div class="package-card">
+        <div class="package-card" data-network="mtn">
           <div class="package-header">
             <h3>4GB</h3>
             <div class="price">GH₵20.50</div>
@@ -139,20 +546,46 @@
           <a href="wallet.html?bundle=4GB&price=20.50&network=MTN" class="btn btn-primary order-btn">Order Now</a>
         </div>
 
-        <div class="package-card">
+        <div class="package-card" data-network="mtn">
           <div class="package-header">
             <h3>5GB</h3>
-            <div class="price">GH₵27</div>
+            <div class="price">GH₵27.00</div>
           </div>
           <div class="package-features">
             <p><i class="fas fa-check"></i> 30 Days Validity</p>
             <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
             <p><i class="fas fa-check"></i> Night Bonus</p>
           </div>
-          <a href="wallet.html?bundle=5GB&price=27&network=MTN" class="btn btn-primary order-btn">Order Now</a>
+          <a href="wallet.html?bundle=5GB&price=27.00&network=MTN" class="btn btn-primary order-btn">Order Now</a>
         </div>
 
-        <div class="package-card">
+        <div class="package-card" data-network="mtn">
+          <div class="package-header">
+            <h3>6GB</h3>
+            <div class="price">GH₵34.00</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> Night Bonus</p>
+          </div>
+          <a href="wallet.html?bundle=6GB&price=34.00&network=MTN" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="mtn">
+          <div class="package-header">
+            <h3>8GB</h3>
+            <div class="price">GH₵40.00</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> Night Bonus</p>
+          </div>
+          <a href="wallet.html?bundle=8GB&price=40.00&network=MTN" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="mtn">
           <div class="package-header">
             <h3>10GB</h3>
             <div class="price">GH₵46.50</div>
@@ -165,7 +598,7 @@
           <a href="wallet.html?bundle=10GB&price=46.50&network=MTN" class="btn btn-primary order-btn">Order Now</a>
         </div>
 
-        <div class="package-card">
+        <div class="package-card" data-network="mtn">
           <div class="package-header">
             <h3>15GB</h3>
             <div class="price">GH₵66.50</div>
@@ -178,17 +611,69 @@
           <a href="wallet.html?bundle=15GB&price=66.50&network=MTN" class="btn btn-primary order-btn">Order Now</a>
         </div>
 
-        <div class="package-card">
+        <div class="package-card" data-network="mtn">
           <div class="package-header">
             <h3>20GB</h3>
             <div class="price">GH₵88.00</div>
           </div>
           <div class="package-features">
             <p><i class="fas fa-check"></i> 30 Days Validity</p>
-            <p><i class="fas fa-check"></i> 2G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
             <p><i class="fas fa-check"></i> Night Bonus</p>
           </div>
-                      <a href="wallet.html?bundle=20GB&price=88.00&network=MTN" class="btn btn-primary order-btn">Order Now</a>
+          <a href="wallet.html?bundle=20GB&price=88.00&network=MTN" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="mtn">
+          <div class="package-header">
+            <h3>25GB</h3>
+            <div class="price">GH₵112.00</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> Night Bonus</p>
+          </div>
+          <a href="wallet.html?bundle=25GB&price=112.00&network=MTN" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="mtn">
+          <div class="package-header">
+            <h3>30GB</h3>
+            <div class="price">GH₵139.00</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> Night Bonus</p>
+          </div>
+          <a href="wallet.html?bundle=30GB&price=139.00&network=MTN" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="mtn">
+          <div class="package-header">
+            <h3>40GB</h3>
+            <div class="price">GH₵165.00</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> Night Bonus</p>
+          </div>
+          <a href="wallet.html?bundle=40GB&price=165.00&network=MTN" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="mtn">
+          <div class="package-header">
+            <h3>50GB</h3>
+            <div class="price">GH₵208.00</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> Night Bonus</p>
+          </div>
+          <a href="wallet.html?bundle=50GB&price=208.00&network=MTN" class="btn btn-primary order-btn">Order Now</a>
         </div>
       </div>
     </div>
@@ -202,7 +687,7 @@
         <p>High-speed Telecel data packages with excellent coverage</p>
       </div>
       <div class="packages-grid">
-        <div class="package-card">
+        <div class="package-card" data-network="telecel">
           <div class="package-header">
             <h3>5GB</h3>
             <div class="price">GH₵27.00</div>
@@ -215,7 +700,7 @@
           <a href="wallet.html?bundle=5GB&price=27.00&network=Telecel" class="btn btn-primary order-btn">Order Now</a>
         </div>
 
-        <div class="package-card">
+        <div class="package-card" data-network="telecel">
           <div class="package-header">
             <h3>10GB</h3>
             <div class="price">GH₵52.00</div>
@@ -228,7 +713,7 @@
           <a href="wallet.html?bundle=10GB&price=52.00&network=Telecel" class="btn btn-primary order-btn">Order Now</a>
         </div>
 
-        <div class="package-card">
+        <div class="package-card" data-network="telecel">
           <div class="package-header">
             <h3>15GB</h3>
             <div class="price">GH₵72.00</div>
@@ -236,12 +721,12 @@
           <div class="package-features">
             <p><i class="fas fa-check"></i> 30 Days Validity</p>
             <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
-                         <p><i class="fas fa-check"></i> Social Media Bonus</p>
+            <p><i class="fas fa-check"></i> Social Media Bonus</p>
           </div>
           <a href="wallet.html?bundle=15GB&price=72.00&network=Telecel" class="btn btn-primary order-btn">Order Now</a>
         </div>
 
-        <div class="package-card">
+        <div class="package-card" data-network="telecel">
           <div class="package-header">
             <h3>20GB</h3>
             <div class="price">GH₵89.00</div>
@@ -252,6 +737,58 @@
             <p><i class="fas fa-check"></i> Social Media Bonus</p>
           </div>
           <a href="wallet.html?bundle=20GB&price=89.00&network=Telecel" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="telecel">
+          <div class="package-header">
+            <h3>25GB</h3>
+            <div class="price">GH₵107.00</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> Social Media Bonus</p>
+          </div>
+          <a href="wallet.html?bundle=25GB&price=107.00&network=Telecel" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="telecel">
+          <div class="package-header">
+            <h3>30GB</h3>
+            <div class="price">GH₵130.00</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> Social Media Bonus</p>
+          </div>
+          <a href="wallet.html?bundle=30GB&price=130.00&network=Telecel" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="telecel">
+          <div class="package-header">
+            <h3>40GB</h3>
+            <div class="price">GH₵175.00</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> Social Media Bonus</p>
+          </div>
+          <a href="wallet.html?bundle=40GB&price=175.00&network=Telecel" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="telecel">
+          <div class="package-header">
+            <h3>50GB</h3>
+            <div class="price">GH₵228.00</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> Social Media Bonus</p>
+          </div>
+          <a href="wallet.html?bundle=50GB&price=228.00&network=Telecel" class="btn btn-primary order-btn">Order Now</a>
         </div>
       </div>
     </div>
@@ -265,46 +802,124 @@
         <p>Affordable AirtelTigo data bundles for all your needs</p>
       </div>
       <div class="packages-grid">
-        <div class="package-card">
+        <div class="package-card" data-network="airteltigo">
           <div class="package-header">
             <h3>1GB</h3>
-            <div class="price">GH₵5</div>
+            <div class="price">GH₵5.00</div>
           </div>
           <div class="package-features">
-            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 7 Days Validity</p>
             <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
             <p><i class="fas fa-check"></i> WhatsApp Free</p>
           </div>
-          <a href="wallet.html?bundle=1GB&price=5&network=AirtelTigo" class="btn btn-primary order-btn">Order Now</a>
+          <a href="wallet.html?bundle=1GB&price=5.00&network=AirtelTigo" class="btn btn-primary order-btn">Order Now</a>
         </div>
 
-        <div class="package-card">
+        <div class="package-card" data-network="airteltigo">
           <div class="package-header">
             <h3>2GB</h3>
             <div class="price">GH₵9.00</div>
           </div>
           <div class="package-features">
-            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 7 Days Validity</p>
             <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
             <p><i class="fas fa-check"></i> WhatsApp Free</p>
           </div>
           <a href="wallet.html?bundle=2GB&price=9.00&network=AirtelTigo" class="btn btn-primary order-btn">Order Now</a>
         </div>
 
-        <div class="package-card">
+        <div class="package-card" data-network="airteltigo">
+          <div class="package-header">
+            <h3>3GB</h3>
+            <div class="price">GH₵14.00</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 7 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> WhatsApp Free</p>
+          </div>
+          <a href="wallet.html?bundle=3GB&price=14.00&network=AirtelTigo" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="airteltigo">
+          <div class="package-header">
+            <h3>4GB</h3>
+            <div class="price">GH₵18.00</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 7 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> WhatsApp Free</p>
+          </div>
+          <a href="wallet.html?bundle=4GB&price=18.00&network=AirtelTigo" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="airteltigo">
           <div class="package-header">
             <h3>5GB</h3>
             <div class="price">GH₵22.00</div>
           </div>
           <div class="package-features">
-            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 7 Days Validity</p>
             <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
             <p><i class="fas fa-check"></i> WhatsApp Free</p>
           </div>
           <a href="wallet.html?bundle=5GB&price=22.00&network=AirtelTigo" class="btn btn-primary order-btn">Order Now</a>
         </div>
 
-        <div class="package-card">
+        <div class="package-card" data-network="airteltigo">
+          <div class="package-header">
+            <h3>6GB</h3>
+            <div class="price">GH₵25.00</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 7 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> WhatsApp Free</p>
+          </div>
+          <a href="wallet.html?bundle=6GB&price=25.00&network=AirtelTigo" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="airteltigo">
+          <div class="package-header">
+            <h3>7GB</h3>
+            <div class="price">GH₵30.00</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 7 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> WhatsApp Free</p>
+          </div>
+          <a href="wallet.html?bundle=7GB&price=30.00&network=AirtelTigo" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="airteltigo">
+          <div class="package-header">
+            <h3>8GB</h3>
+            <div class="price">GH₵35.00</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 7 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> WhatsApp Free</p>
+          </div>
+          <a href="wallet.html?bundle=8GB&price=35.00&network=AirtelTigo" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="airteltigo">
+          <div class="package-header">
+            <h3>9GB</h3>
+            <div class="price">GH₵40.00</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 7 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> WhatsApp Free</p>
+          </div>
+          <a href="wallet.html?bundle=9GB&price=40.00&network=AirtelTigo" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="airteltigo">
           <div class="package-header">
             <h3>10GB</h3>
             <div class="price">GH₵42.00</div>
@@ -315,6 +930,123 @@
             <p><i class="fas fa-check"></i> WhatsApp Free</p>
           </div>
           <a href="wallet.html?bundle=10GB&price=42.00&network=AirtelTigo" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="airteltigo">
+          <div class="package-header">
+            <h3>11GB</h3>
+            <div class="price">GH₵44.50</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> WhatsApp Free</p>
+          </div>
+          <a href="wallet.html?bundle=11GB&price=44.50&network=AirtelTigo" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="airteltigo">
+          <div class="package-header">
+            <h3>12GB</h3>
+            <div class="price">GH₵50.00</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> WhatsApp Free</p>
+          </div>
+          <a href="wallet.html?bundle=12GB&price=50.00&network=AirtelTigo" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="airteltigo">
+          <div class="package-header">
+            <h3>15GB</h3>
+            <div class="price">GH₵60.50</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> WhatsApp Free</p>
+          </div>
+          <a href="wallet.html?bundle=15GB&price=60.50&network=AirtelTigo" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="airteltigo">
+          <div class="package-header">
+            <h3>20GB</h3>
+            <div class="price">GH₵78.00</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> WhatsApp Free</p>
+          </div>
+          <a href="wallet.html?bundle=20GB&price=78.00&network=AirtelTigo" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="airteltigo">
+          <div class="package-header">
+            <h3>25GB</h3>
+            <div class="price">GH₵98.00</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> WhatsApp Free</p>
+          </div>
+          <a href="wallet.html?bundle=25GB&price=98.00&network=AirtelTigo" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="airteltigo">
+          <div class="package-header">
+            <h3>30GB</h3>
+            <div class="price">GH₵117.00</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> WhatsApp Free</p>
+          </div>
+          <a href="wallet.html?bundle=30GB&price=117.00&network=AirtelTigo" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="airteltigo">
+          <div class="package-header">
+            <h3>40GB</h3>
+            <div class="price">GH₵155.00</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> WhatsApp Free</p>
+          </div>
+          <a href="wallet.html?bundle=40GB&price=155.00&network=AirtelTigo" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="airteltigo">
+          <div class="package-header">
+            <h3>50GB</h3>
+            <div class="price">GH₵192.00</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> WhatsApp Free</p>
+          </div>
+          <a href="wallet.html?bundle=50GB&price=192.00&network=AirtelTigo" class="btn btn-primary order-btn">Order Now</a>
+        </div>
+
+        <div class="package-card" data-network="airteltigo">
+          <div class="package-header">
+            <h3>100GB</h3>
+            <div class="price">GH₵380.00</div>
+          </div>
+          <div class="package-features">
+            <p><i class="fas fa-check"></i> 30 Days Validity</p>
+            <p><i class="fas fa-check"></i> 4G/LTE Speed</p>
+            <p><i class="fas fa-check"></i> WhatsApp Free</p>
+          </div>
+          <a href="wallet.html?bundle=100GB&price=380.00&network=AirtelTigo" class="btn btn-primary order-btn">Order Now</a>
         </div>
       </div>
     </div>
@@ -364,6 +1096,6 @@
     </div>
   </footer>
 
-  <script src="script.js"></script>
+
 </body>
 </html> 

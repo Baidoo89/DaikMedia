@@ -1,0 +1,92 @@
+/* Wallet page overrides and enhancements */
+
+/* Transaction History button styling */
+.history-btn {
+  border: 1px solid rgba(102, 126, 234, 0.35);
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  color: #333;
+  transition: all 0.25s ease;
+}
+
+.history-btn .btn-icon i {
+  color: #667eea;
+}
+
+.history-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.25);
+}
+
+.history-btn:active {
+  transform: translateY(0);
+}
+
+/* Make action buttons full width on mobile for clarity */
+@media (max-width: 768px) {
+  .wallet-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .wallet-actions .action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Payment features readability */
+.payment-features {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.payment-features .feature-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+}
+
+.payment-features .feature-item i {
+  color: #28a745;
+}
+
+@media (max-width: 600px) {
+  .payment-features {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Clarify payment method labels spacing */
+.payment-methods label span {
+  font-weight: 600;
+}
+
+.amount-input-wrapper input#amount {
+  font-weight: 700;
+}
+
+/* Quick amount buttons active state for better clarity */
+.quick-amount-btn.active {
+  background: #667eea;
+  color: #fff;
+  border-color: #667eea;
+}
+
+
+/* Force readable text color on Transaction History button */
+button.history-btn,
+.history-btn span,
+.history-btn i {
+  color: #1f2937 !important; /* slate-800 */
+}
+
+/* Ensure feature texts are readable in Load Money modal */
+.payment-features .feature-item span {
+  color: #1f2937 !important;
+}
+.payment-features .feature-item i {
+  color: #28a745 !important;
+}
+

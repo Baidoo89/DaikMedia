@@ -77,6 +77,9 @@ function doPost(e) {
     if (action === 'saveWalletData') {
       return handleWalletBackup_(data);
     }
+    if (action === 'notifyWalletLoad') {
+      return handleWalletLoadNotification_(data);
+    }
     
     Logger.log('❌ Invalid action: ' + action);
     return ContentService
@@ -107,8 +110,8 @@ function handleOrderSubmission_(data) {
     // Ensure headers exist and are formatted
     ensureSheetHeaders_(sheet);
     
-    // Get the next Order ID before saving
-    const nextOrderID = getNextOrderID_();
+    // Respect client-provided orderId to keep UI/Sheet/Telegram in sync; otherwise generate next
+    const nextOrderID = data.orderId ? { orderID: String(data.orderId) } : getNextOrderID_();
     
     // Enhanced professional row structure
     const row = [
@@ -153,6 +156,45 @@ function handleOrderSubmission_(data) {
     Logger.log('❌ Order submission error: ' + error.toString());
     return ContentService
       .createTextOutput(JSON.stringify({ 'success': false, 'error': error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Handle wallet load Telegram notification from client without exposing bot token
+function handleWalletLoadNotification_(data) {
+  try {
+    const cfg = getConfig_();
+    if (!cfg.TELEGRAM.BOT_TOKEN || !cfg.TELEGRAM.CHAT_ID) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: false, error: 'Telegram not configured' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const amount = data.amount || '0.00';
+    const method = data.method || 'Wallet';
+    const reference = data.reference || 'N/A';
+    const email = data.email || 'N/A';
+
+    const message = `💰 *WALLET MONEY LOADED*\n\n`
+      + `📧 *Email:* ${email}\n`
+      + `💳 *Method:* ${method}\n`
+      + `💰 *Amount:* GH₵${amount}\n`
+      + `🔗 *Reference:* ${reference}\n`
+      + `⏰ *Time:* ${new Date().toLocaleString()}`;
+
+    const url = `https://api.telegram.org/bot${cfg.TELEGRAM.BOT_TOKEN}/sendMessage`;
+    const payload = { chat_id: cfg.TELEGRAM.CHAT_ID, text: message, parse_mode: 'Markdown' };
+
+    const response = UrlFetchApp.fetch(url, { method: 'post', payload, muteHttpExceptions: true });
+    const ok = response.getResponseCode() === 200;
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: ok, status: response.getResponseCode(), body: response.getContentText() }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: false, error: String(err) }))
       .setMimeType(ContentService.MimeType.JSON);
   }
 }
@@ -367,9 +409,9 @@ function json(obj) {
 function setSecrets() {
   const props = PropertiesService.getScriptProperties();
   props.setProperties({
-    // ==== Paystack (for future use) ====
-    PAYSTACK_PUBLIC_KEY: 'pk_live_e6b3d2f2d1e0efa6c8d8675c6c555cb0576b2e33',
-    PAYSTACK_SECRET_KEY: 'sk_live_3b8edbaf7e6a64510665870a9b7fcb8ec2521d93',
+    // ==== Paystack (configure in Script Properties UI) ====
+    PAYSTACK_PUBLIC_KEY: props.getProperty('PAYSTACK_PUBLIC_KEY') || '',
+    PAYSTACK_SECRET_KEY: props.getProperty('PAYSTACK_SECRET_KEY') || '',
 
     // ==== Company Info ====
     COMPANY_NAME: 'Daik Media',
@@ -377,9 +419,9 @@ function setSecrets() {
     COMPANY_PHONE: '+233531257913',
     COMPANY_WEBSITE: 'https://daikmedia.com',
 
-    // ==== Telegram (for future use) ====
-    TELEGRAM_BOT_TOKEN: '8427904139:AAGo8Io1YmTGz7SIQxd0Emam9rEU__iR1SM',
-    TELEGRAM_CHAT_ID: '7271153158'
+    // ==== Telegram (configure in Script Properties UI) ====
+    TELEGRAM_BOT_TOKEN: props.getProperty('TELEGRAM_BOT_TOKEN') || '',
+    TELEGRAM_CHAT_ID: props.getProperty('TELEGRAM_CHAT_ID') || ''
   });
   
   Logger.log('✅ Configuration set successfully');

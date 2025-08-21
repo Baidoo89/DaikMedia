@@ -6,23 +6,371 @@
   <title>Contact Us - Daik Media</title>
   <link rel="stylesheet" href="styles.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  
+  <!-- Firebase Configuration -->
+  <script src="config.js"></script>
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+  
+  <!-- Authentication -->
+  <script src="auth.js"></script>
+  
+  <style>
+    /* User Info and Logout Styling */
+    .user-info {
+      margin-left: auto;
+    }
+    
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 10px 15px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 25px;
+      border: 1px solid #dee2e6;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .user-email {
+      font-size: 14px;
+      font-weight: 500;
+      color: #495057;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    .logout-btn {
+      background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+    }
+    
+    .logout-btn:hover {
+      background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+    }
+    
+    .logout-btn:active {
+      transform: translateY(0);
+    }
+    
+    .logout-btn i {
+      font-size: 12px;
+    }
+    
+    /* Mobile User Info Styling */
+    .mobile-user-info {
+      display: none; /* Hidden on desktop */
+    }
+    
+    .mobile-user-menu {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      margin: 10px 0;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .mobile-user-email {
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+      text-align: center;
+      word-break: break-word;
+      max-width: 250px;
+    }
+    
+    .mobile-logout-btn {
+      background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 25px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+      min-width: 120px;
+      justify-content: center;
+    }
+    
+    .mobile-logout-btn:hover {
+      background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(220, 53, 69, 0.4);
+    }
+    
+    .mobile-logout-btn:active {
+      transform: translateY(0);
+    }
+    
+    .mobile-logout-btn i {
+      font-size: 14px;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .user-menu {
+        flex-direction: column;
+        gap: 10px;
+        padding: 15px;
+        text-align: center;
+      }
+      
+      .user-email {
+        max-width: 150px;
+      }
+      
+      /* Show mobile user info on mobile */
+      .mobile-user-info {
+        display: block;
+      }
+      
+      /* Hide desktop user info on mobile */
+      .user-info {
+        display: none;
+      }
+    }
+  </style>
+  
+  <script>
+    // Check authentication when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if Firebase is properly configured
+      if (typeof firebase === 'undefined') {
+        console.error('❌ Firebase not loaded, redirecting to login');
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      // Check if auth functions are available
+      if (typeof authFunctions === 'undefined') {
+        console.error('❌ Auth functions not loaded, redirecting to login');
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      // Check authentication status
+      checkAuthentication();
+      
+      // Initialize contact form
+      initializeContactForm();
+      
+      // Initialize FAQ functionality
+      initializeFAQ();
+      
+      // Initialize hamburger menu
+      initializeHamburgerMenu();
+    });
+    
+        // Improved authentication check
+    async function checkAuthentication() {
+        try {
+            // Wait for Firebase auth to be ready
+            console.log('🔍 Contact: Waiting for Firebase auth to be ready...');
+            const isAuth = await authFunctions.waitForAuth();
+            
+            if (!isAuth) {
+                console.log('❌ User not authenticated, redirecting to login');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // User is authenticated, display user info
+            console.log('✅ User authenticated, displaying user info');
+            displayUserInfo();
+            
+        } catch (error) {
+            console.error('❌ Authentication check failed:', error);
+            // Fallback: redirect to login
+            window.location.href = 'login.html';
+        }
+    }
+    
+    // Display user information (no extra logout injected to avoid duplicates)
+    function displayUserInfo() {
+      try {
+        const currentUser = authFunctions.getCurrentUser();
+        if (currentUser) {
+          console.log('👤 Current user:', currentUser.email);
+          // Logout is handled via the existing nav-menu Logout link
+        } else {
+          console.error('❌ No current user found');
+          window.location.href = 'login.html';
+        }
+      } catch (error) {
+        console.error('❌ Error displaying user info:', error);
+        window.location.href = 'login.html';
+      }
+    }
+    
+    // Logout function
+    async function logout() {
+      try {
+        const result = await authFunctions.signOut();
+        if (result.success) {
+          console.log('✅ User logged out successfully');
+          // Redirect to login page
+          window.location.href = 'login.html';
+        } else {
+          console.error('❌ Logout failed:', result.error);
+          // Force redirect even if logout fails
+          window.location.href = 'login.html';
+        }
+      } catch (error) {
+        console.error('❌ Logout error:', error);
+        // Force redirect even if logout fails
+        window.location.href = 'login.html';
+      }
+    }
+    
+    // Initialize contact form functionality
+    function initializeContactForm() {
+      const contactForm = document.getElementById('contactForm');
+      if (contactForm) {
+        contactForm.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          
+          const submitBtn = contactForm.querySelector('button[type="submit"]');
+          const btnText = submitBtn.querySelector('.btn-text');
+          const loading = submitBtn.querySelector('.loading');
+          
+          // Show loading state
+          btnText.style.display = 'none';
+          loading.style.display = 'inline-block';
+          submitBtn.disabled = true;
+          
+          try {
+            const formData = {
+              name: document.getElementById('contactName').value,
+              email: document.getElementById('contactEmail').value,
+              phone: document.getElementById('contactPhone').value,
+              subject: document.getElementById('contactSubject').value,
+              message: document.getElementById('contactMessage').value,
+              timestamp: new Date().toISOString()
+            };
+            
+            // Here you would normally send the data to your backend
+            // For now, we'll simulate a successful submission
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            alert('✅ Message sent successfully! We\'ll get back to you soon.');
+            contactForm.reset();
+            
+          } catch (error) {
+            console.error('❌ Error sending message:', error);
+            alert('❌ Error sending message. Please try again or contact us directly.');
+          } finally {
+            // Reset button state
+            btnText.style.display = 'inline-block';
+            loading.style.display = 'none';
+            submitBtn.disabled = false;
+          }
+        });
+      }
+    }
+    
+    // Initialize FAQ functionality
+    function initializeFAQ() {
+      const faqItems = document.querySelectorAll('.faq-item');
+      
+      faqItems.forEach(item => {
+        const question = item.querySelector('.faq-question');
+        const answer = item.querySelector('.faq-answer');
+        const icon = question.querySelector('i');
+        
+        question.addEventListener('click', () => {
+          const isOpen = item.classList.contains('active');
+          
+          // Close all other FAQ items
+          faqItems.forEach(otherItem => {
+            otherItem.classList.remove('active');
+            const otherIcon = otherItem.querySelector('.faq-question i');
+            otherIcon.style.transform = 'rotate(0deg)';
+          });
+          
+          // Toggle current item
+          if (!isOpen) {
+            item.classList.add('active');
+            icon.style.transform = 'rotate(180deg)';
+          }
+        });
+      });
+    }
+    
+    // Hamburger menu functionality
+    function initializeHamburgerMenu() {
+      const hamburger = document.querySelector('.hamburger');
+      const navMenu = document.querySelector('.nav-menu');
+      
+      if (hamburger && navMenu) {
+        hamburger.addEventListener('click', function() {
+          hamburger.classList.toggle('active');
+          navMenu.classList.toggle('active');
+        });
+        
+        // Close menu when clicking on a link
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+          link.addEventListener('click', () => {
+            hamburger.classList.remove('active');
+            navMenu.classList.remove('active');
+          });
+        });
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+          if (!hamburger.contains(e.target) && !navMenu.contains(e.target)) {
+            hamburger.classList.remove('active');
+            navMenu.classList.remove('active');
+          }
+        });
+      }
+    }
+  </script>
 </head>
 <body>
   <!-- Navigation -->
   <nav class="navbar">
     <div class="nav-container">
       <div class="nav-logo">
-        <a href="index.html">
+                        <a href="dashboard.html">
           <i class="fas fa-wifi"></i>
-          <span>Daik Media</span>
+          <span>DAik MEDIA</span>
         </a>
       </div>
       <ul class="nav-menu">
-        <li><a href="index.html" class="nav-link">Home</a></li>
+                    <li><a href="dashboard.html" class="nav-link">Home</a></li>
         <li><a href="services.html" class="nav-link">Services</a></li>
         <li><a href="wallet.html" class="nav-link order-now-nav">Order Now</a></li>
         <li><a href="about.html" class="nav-link">About</a></li>
         <li><a href="contact.html" class="nav-link active">Contact</a></li>
+        <li><a href="#" class="nav-link logout-link" onclick="logout()"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a></li>
       </ul>
       <div class="hamburger">
         <span class="bar"></span>
@@ -50,7 +398,7 @@
         <div class="notice-content">
           <h3>💰 Need Help with Your Wallet?</h3>
           <p>Having trouble loading money or placing orders? Our support team is here to help! Contact us via WhatsApp, Telegram, or phone for immediate assistance with your wallet and orders.</p>
-          <a href="index.html" class="btn btn-primary">
+          <a href="dashboard.html" class="btn btn-primary">
             <i class="fas fa-arrow-right"></i>
             Go to Wallet & Orders
           </a>
@@ -207,7 +555,7 @@
             <i class="fas fa-chevron-down"></i>
           </div>
           <div class="faq-answer">
-            <p>Yes, we provide data bundles for MTN, Vodafone, and AirtelTigo networks in Ghana.</p>
+            <p>Yes, we provide data bundles for MTN, Telecel, and AirtelTigo networks in Ghana.</p>
           </div>
         </div>
         
@@ -295,7 +643,7 @@
           <h4>Services</h4>
           <ul>
             <li><a href="services.html#mtn">MTN Data</a></li>
-            <li><a href="services.html#vodafone">Telecel Data</a></li>
+            <li><a href="services.html#telecel">Telecel Data</a></li>
             <li><a href="services.html#airteltigo">AirtelTigo Data</a></li>
           </ul>
         </div>
@@ -320,6 +668,6 @@
     </div>
   </footer>
 
-  <script src="script.js"></script>
+
 </body>
 </html> 
