@@ -142,8 +142,8 @@ document.addEventListener('DOMContentLoaded', function() {
 ⏰ Order Time: ${new Date().toLocaleString()}`;
       
       // Telegram Bot Notification
-      const telegramBotToken = "8427904139:AAGo8Io1YmTGz7SIQxd0Emam9rEU__iR1SM";
-      const chatId = "7271153158";
+      const telegramBotToken = "8294234733:AAHEmg-VGJoD4_y0xOmqHDJLmHX0RylQqfc";
+      const chatId = "Id- 615245748";
       
       const telegramMessage = `📦 *New Order Received*
 
@@ -354,4 +354,5 @@ function closeSuccessMessage() {
   if (successDiv) {
     document.body.removeChild(successDiv);
   }
+
 } 
