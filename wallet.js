@@ -93,20 +93,20 @@ async function saveWalletToServer() {
 // Data packages for different networks
 const packageData = {
   MTN: [
-    { name: "1GB", price: 5.50, validity: "30 Days" },
-    { name: "2GB", price: 10.50, validity: "30 Days" },
-    { name: "3GB", price: 15.50, validity: "30 Days" },
-    { name: "4GB", price: 20.50, validity: "30 Days" },
-    { name: "5GB", price: 27.00, validity: "30 Days" },
-    { name: "6GB", price: 34.00, validity: "30 Days" },
-    { name: "8GB", price: 40.00, validity: "30 Days" },
-    { name: "10GB", price: 46.50, validity: "30 Days" },
-    { name: "15GB", price: 66.50, validity: "30 Days" },
-    { name: "20GB", price: 88.00, validity: "30 Days" },
-    { name: "25GB", price: 112.00, validity: "30 Days" },
-    { name: "30GB", price: 139.00, validity: "30 Days" },
-    { name: "40GB", price: 165.00, validity: "30 Days" },
-    { name: "50GB", price: 208.00, validity: "30 Days" }
+    { name: "1GB", price: 5.00, validity: "30 Days" },
+    { name: "2GB", price: 10.00, validity: "30 Days" },
+    { name: "3GB", price: 15.00, validity: "30 Days" },
+    { name: "4GB", price: 20.00, validity: "30 Days" },
+    { name: "5GB", price: 26.00, validity: "30 Days" },
+    { name: "6GB", price: 33.00, validity: "30 Days" },
+    { name: "8GB", price: 39.00, validity: "30 Days" },
+    { name: "10GB", price: 45.50, validity: "30 Days" },
+    { name: "15GB", price: 66.00, validity: "30 Days" },
+    { name: "20GB", price: 87.00, validity: "30 Days" },
+    { name: "25GB", price: 110.00, validity: "30 Days" },
+    { name: "30GB", price: 138.00, validity: "30 Days" },
+    { name: "40GB", price: 164.00, validity: "30 Days" },
+    { name: "50GB", price: 207.00, validity: "30 Days" }
   ],
   Telecel: [
     { name: "5GB", price: 27.00, validity: "30 Days" },
