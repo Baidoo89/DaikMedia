@@ -44,6 +44,12 @@ async function signUp(email, password, name, phone) {
   try {
     // Create user account
     const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+    
+    // Validate userCredential before destructuring
+    if (!userCredential || !userCredential.user) {
+      throw new Error('Failed to create user account. Please try again.');
+    }
+    
     const user = userCredential.user;
     
     // Create user profile in Firestore
@@ -63,7 +69,7 @@ async function signUp(email, password, name, phone) {
     
   } catch (error) {
     console.error('❌ Sign up error:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error.message || 'Account creation failed' };
   }
 }
 
@@ -71,6 +77,12 @@ async function signUp(email, password, name, phone) {
 async function signIn(email, password) {
   try {
     const userCredential = await auth.signInWithEmailAndPassword(email, password);
+    
+    // Validate userCredential before destructuring
+    if (!userCredential || !userCredential.user) {
+      throw new Error('Failed to sign in. Please try again.');
+    }
+    
     const user = userCredential.user;
     
     // Update last login
@@ -82,7 +94,7 @@ async function signIn(email, password) {
     
   } catch (error) {
     console.error('❌ Sign in error:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error.message || 'Sign in failed' };
   }
 }
 

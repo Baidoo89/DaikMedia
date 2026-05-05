@@ -9,9 +9,56 @@ let walletBalance = 0;
 let transactions = [];
 
 // Load wallet data from localStorage with fallback
-function loadWalletData() {
+async function loadWalletData() {
   try {
-    // Try to load from localStorage
+    // Check if user is authenticated with Firebase using optional chaining
+    if (typeof authFunctions !== 'undefined' && authFunctions?.isAuthenticated?.()) {
+      console.log('🔥 User authenticated, loading wallet from Firebase...');
+      
+      // Load from Firebase first
+      try {
+        await authFunctions.loadUserWalletData();
+        const firebaseWallet = authFunctions.getUserWalletData();
+        if (firebaseWallet) {
+          // Sync Firebase data to local variables
+          walletBalance = parseFloat(firebaseWallet.balance) || 0;
+          transactions = firebaseWallet.transactions || [];
+          
+          // Update localStorage with Firebase data
+          localStorage.setItem('walletBalance', walletBalance.toString());
+          localStorage.setItem('transactions', JSON.stringify(transactions));
+          
+          console.log('✅ Wallet data loaded from Firebase:', { walletBalance, transactionCount: transactions.length });
+          
+          // Update display
+          updateWalletDisplay();
+          loadTransactionHistory();
+          return; // Exit early since Firebase load succeeded
+        }
+      } catch (firebaseError) {
+        console.error('⚠️ Firebase wallet load failed, falling back to localStorage:', firebaseError);
+      }
+    } else {
+      // User not authenticated, load from localStorage
+      console.log('ℹ️ User not authenticated, loading from localStorage');
+    }
+    
+    // Fallback to localStorage if Firebase failed or user not authenticated
+    loadFromLocalStorage();
+    
+    // Also try to load from server as backup
+    loadWalletFromServer();
+    
+  } catch (error) {
+    console.error('❌ Error loading wallet data:', error);
+    // Try to load from server as fallback
+    loadWalletFromServer();
+  }
+}
+
+// Helper function to load from localStorage
+function loadFromLocalStorage() {
+  try {
     const storedBalance = localStorage.getItem('walletBalance');
     const storedTransactions = localStorage.getItem('transactions');
     
@@ -25,13 +72,11 @@ function loadWalletData() {
     
     console.log('✅ Wallet data loaded from localStorage:', { walletBalance, transactionCount: transactions.length });
     
-    // Also try to load from server as backup
-    loadWalletFromServer();
-    
+    // Update display
+    updateWalletDisplay();
+    loadTransactionHistory();
   } catch (error) {
-    console.error('❌ Error loading wallet data from localStorage:', error);
-    // Try to load from server as fallback
-    loadWalletFromServer();
+    console.error('❌ Error loading from localStorage:', error);
   }
 }
 
@@ -93,20 +138,20 @@ async function saveWalletToServer() {
 // Data packages for different networks
 const packageData = {
   MTN: [
-    { name: "1GB", price: 5.00, validity: "30 Days" },
-    { name: "2GB", price: 10.00, validity: "30 Days" },
-    { name: "3GB", price: 15.00, validity: "30 Days" },
-    { name: "4GB", price: 20.00, validity: "30 Days" },
-    { name: "5GB", price: 26.00, validity: "30 Days" },
-    { name: "6GB", price: 33.00, validity: "30 Days" },
-    { name: "8GB", price: 39.00, validity: "30 Days" },
-    { name: "10GB", price: 45.50, validity: "30 Days" },
-    { name: "15GB", price: 66.00, validity: "30 Days" },
-    { name: "20GB", price: 87.00, validity: "30 Days" },
-    { name: "25GB", price: 110.00, validity: "30 Days" },
-    { name: "30GB", price: 138.00, validity: "30 Days" },
-    { name: "40GB", price: 164.00, validity: "30 Days" },
-    { name: "50GB", price: 207.00, validity: "30 Days" }
+    { name: "1GB", price: 4.20, validity: "30 Days" },
+    { name: "2GB", price: 8.40, validity: "30 Days" },
+    { name: "3GB", price: 12.60, validity: "30 Days" },
+    { name: "4GB", price: 16.80, validity: "30 Days" },
+    { name: "5GB", price: 20.50, validity: "30 Days" },
+    { name: "6GB", price: 25.00, validity: "30 Days" },
+    { name: "8GB", price: 33.00, validity: "30 Days" },
+    { name: "10GB", price: 40.50, validity: "30 Days" },
+    { name: "15GB", price: 59.00, validity: "30 Days" },
+    { name: "20GB", price: 78.00, validity: "30 Days" },
+    { name: "25GB", price: 97.00, validity: "30 Days" },
+    { name: "30GB", price: 117.00, validity: "30 Days" },
+    { name: "40GB", price: 158.00, validity: "30 Days" },
+    { name: "50GB", price: 195.00, validity: "30 Days" }
   ],
   Telecel: [
     { name: "5GB", price: 27.00, validity: "30 Days" },
@@ -553,13 +598,13 @@ function processMoMoPayment() {
       amount: Math.round(amount * 100), // Paystack expects amount in kobo
       currency: 'GHS',
       channels: ['mobile_money'], // Enable mobile money channels
-      callback: function(response) {
+      callback: async function(response) {
         console.log('✅ MoMo payment successful:', response);
         
         // Verify the payment actually worked
         if (response.status === 'success' && response.reference) {
-          // Add to wallet with proper error handling
-          const result = addToWallet(amount, 'Paystack Mobile Money');
+          // Add to wallet with proper error handling (now async)
+          const result = await addToWallet(amount, 'Paystack Mobile Money');
           
           if (result.success) {
             showSuccessModal(
@@ -650,13 +695,13 @@ function processBankPayment() {
       amount: Math.round(amount * 100), // Paystack expects amount in kobo
       currency: 'GHS',
       channels: ['bank'], // Enable bank transfer channels
-      callback: function(response) {
+      callback: async function(response) {
         console.log('✅ Bank transfer successful:', response);
         
         // Verify the payment actually worked
         if (response.status === 'success' && response.reference) {
-          // Add to wallet with proper error handling
-          const result = addToWallet(amount, 'Paystack Bank Transfer');
+          // Add to wallet with proper error handling (now async)
+          const result = await addToWallet(amount, 'Paystack Bank Transfer');
           
           if (result.success) {
             showSuccessModal(
@@ -763,13 +808,13 @@ function processCardPayment() {
       email: 'customer@daikmedia.com', // You can make this dynamic
       amount: Math.round(amount * 100), // Paystack expects amount in kobo (smallest currency unit)
       currency: 'GHS',
-      callback: function(response) {
+      callback: async function(response) {
         console.log('✅ Card payment successful:', response);
         
         // Verify the payment actually worked
         if (response.status === 'success' && response.reference) {
-          // Add to wallet with proper error handling
-          const result = addToWallet(amount, 'Paystack Card Payment');
+          // Add to wallet with proper error handling (now async)
+          const result = await addToWallet(amount, 'Paystack Card Payment');
           
           if (result.success) {
             showSuccessModal(
@@ -832,16 +877,15 @@ You can now place your orders!`,
 }
 
 // Wallet functions
-function addToWallet(amount, method) {
+async function addToWallet(amount, method) {
+  let oldBalance = walletBalance;
+  
   try {
     // Validate amount
     if (!amount || isNaN(amount) || amount <= 0) {
       console.error('❌ Invalid amount for wallet:', amount);
       throw new Error('Invalid amount');
     }
-    
-    // Store old balance for comparison
-    const oldBalance = walletBalance;
     
     // Add to wallet balance
     walletBalance += amount;
@@ -850,15 +894,6 @@ function addToWallet(amount, method) {
     if (walletBalance !== oldBalance + amount) {
       console.error('❌ Wallet balance calculation error');
       throw new Error('Balance calculation failed');
-    }
-    
-    // Save to localStorage
-    try {
-      localStorage.setItem('walletBalance', walletBalance.toString());
-      console.log('✅ Wallet balance saved to localStorage:', walletBalance);
-    } catch (localError) {
-      console.error('❌ Failed to save to localStorage:', localError);
-      // Continue anyway - we'll try server backup
     }
     
     // Create transaction record
@@ -875,12 +910,33 @@ function addToWallet(amount, method) {
     // Add to transactions array
     transactions.unshift(transaction);
     
-    // Save transactions to localStorage
+    // CRITICAL FIX: Update Firebase FIRST if user is authenticated (before localStorage)
+    // This ensures consistency if Firebase update fails
     try {
+      if (typeof authFunctions !== 'undefined' && authFunctions?.isAuthenticated?.()) {
+        console.log('🔥 User is authenticated, syncing to Firebase...');
+        await authFunctions.addToWalletFirebase(amount, method);
+        console.log('✅ Firebase wallet updated successfully');
+      } else {
+        console.log('ℹ️ User not authenticated, skipping Firebase sync');
+      }
+    } catch (firebaseError) {
+      console.error('❌ Firebase update failed, rolling back local changes:', firebaseError);
+      // Rollback local changes
+      walletBalance = oldBalance;
+      transactions.shift(); // Remove the transaction we just added
+      throw new Error(`Failed to sync with server: ${firebaseError.message}`);
+    }
+    
+    // Save to localStorage (only after Firebase succeeds or if not authenticated)
+    try {
+      localStorage.setItem('walletBalance', walletBalance.toString());
       localStorage.setItem('transactions', JSON.stringify(transactions));
-      console.log('✅ Transactions saved to localStorage');
+      console.log('✅ Wallet data saved to localStorage');
     } catch (localError) {
-      console.error('❌ Failed to save transactions to localStorage:', localError);
+      console.error('❌ Failed to save to localStorage:', localError);
+      // If localStorage fails but Firebase succeeded, still continue
+      // User will have correct balance on next session load from Firebase
     }
     
     // Save to server as backup
@@ -916,8 +972,8 @@ function addToWallet(amount, method) {
   } catch (error) {
     console.error('❌ Error adding to wallet:', error);
     
-    // Revert balance if there was an error
-    walletBalance = oldBalance || 0;
+    // Ensure balance is reverted
+    walletBalance = oldBalance;
     
     // Show error to user
     showSuccessModal(
@@ -933,36 +989,69 @@ function addToWallet(amount, method) {
   }
 }
 
-function deductFromWallet(amount, description) {
+async function deductFromWallet(amount, description) {
+  const oldBalance = walletBalance;
+  
+  // Check sufficient balance
   if (walletBalance < amount) {
     return false;
   }
   
-  walletBalance -= amount;
-  localStorage.setItem('walletBalance', walletBalance.toString());
-  
-  // Add transaction
-  const transaction = {
-    id: Date.now(),
-    type: 'debit',
-    amount: amount,
-    method: 'Wallet',
-    date: new Date().toISOString(),
-    description: description
-  };
-  
-  transactions.unshift(transaction);
-  localStorage.setItem('transactions', JSON.stringify(transactions));
-  
-  updateWalletDisplay();
-  updateWalletStats();
-  
-  // Check if user can still place orders
-  if (document.getElementById('bundle')) {
-    checkOrderEligibility();
+  try {
+    // Deduct from wallet balance
+    walletBalance -= amount;
+    
+    // Add transaction
+    const transaction = {
+      id: Date.now(),
+      type: 'debit',
+      amount: amount,
+      method: 'Wallet',
+      date: new Date().toISOString(),
+      description: description
+    };
+    
+    // Add to transactions array
+    transactions.unshift(transaction);
+    
+    // CRITICAL FIX: Update Firebase FIRST if user is authenticated (before localStorage)
+    // This ensures consistency if Firebase update fails
+    try {
+      if (typeof authFunctions !== 'undefined' && authFunctions?.isAuthenticated?.()) {
+        console.log('🔥 User is authenticated, syncing deduction to Firebase...');
+        await authFunctions.deductFromWalletFirebase(amount, description);
+        console.log('✅ Firebase wallet deduction updated successfully');
+      } else {
+        console.log('ℹ️ User not authenticated, skipping Firebase sync for deduction');
+      }
+    } catch (firebaseError) {
+      console.error('❌ Firebase deduction failed, rolling back local changes:', firebaseError);
+      // Rollback local changes
+      walletBalance = oldBalance;
+      transactions.shift(); // Remove the transaction we just added
+      throw new Error(`Failed to sync with server: ${firebaseError.message}`);
+    }
+    
+    // Save to localStorage (only after Firebase succeeds or if not authenticated)
+    localStorage.setItem('walletBalance', walletBalance.toString());
+    localStorage.setItem('transactions', JSON.stringify(transactions));
+    
+    updateWalletDisplay();
+    updateWalletStats();
+    
+    // Check if user can still place orders
+    if (document.getElementById('bundle')) {
+      checkOrderEligibility();
+    }
+    
+    return true;
+    
+  } catch (error) {
+    console.error('❌ Error deducting from wallet:', error);
+    // Ensure balance is reverted
+    walletBalance = oldBalance;
+    return false;
   }
-  
-  return true;
 }
 
 // Load transaction history
@@ -1121,8 +1210,8 @@ async function handleOrderSubmission(e) {
   loading.style.display = 'inline-block';
   submitButton.disabled = true;
   
-  // Deduct from wallet
-  const deductionSuccess = deductFromWallet(price, `Data Order: ${bundle} for ${network}`);
+  // Deduct from wallet (now async)
+  const deductionSuccess = await deductFromWallet(price, `Data Order: ${bundle} for ${network}`);
   
   if (!deductionSuccess) {
     alert('Failed to process payment. Please try again.');
