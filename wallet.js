@@ -11,7 +11,53 @@ let transactions = [];
 // Load wallet data from localStorage with fallback
 function loadWalletData() {
   try {
-    // Try to load from localStorage
+    // Check if user is authenticated with Firebase
+    if (typeof authFunctions !== 'undefined' && authFunctions.isAuthenticated && authFunctions.isAuthenticated()) {
+      console.log('🔥 User authenticated, loading wallet from Firebase...');
+      
+      // Load from Firebase first
+      authFunctions.loadUserWalletData()
+        .then(() => {
+          const firebaseWallet = authFunctions.getUserWalletData();
+          if (firebaseWallet) {
+            // Sync Firebase data to local variables
+            walletBalance = parseFloat(firebaseWallet.balance) || 0;
+            transactions = firebaseWallet.transactions || [];
+            
+            // Update localStorage with Firebase data
+            localStorage.setItem('walletBalance', walletBalance.toString());
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            
+            console.log('✅ Wallet data loaded from Firebase:', { walletBalance, transactionCount: transactions.length });
+            
+            // Update display
+            updateWalletDisplay();
+            loadTransactionHistory();
+          }
+        })
+        .catch(error => {
+          console.error('⚠️ Firebase wallet load failed, falling back to localStorage:', error);
+          loadFromLocalStorage();
+        });
+    } else {
+      // User not authenticated, load from localStorage
+      console.log('ℹ️ User not authenticated, loading from localStorage');
+      loadFromLocalStorage();
+    }
+    
+    // Also try to load from server as backup
+    loadWalletFromServer();
+    
+  } catch (error) {
+    console.error('❌ Error loading wallet data:', error);
+    // Try to load from server as fallback
+    loadWalletFromServer();
+  }
+}
+
+// Helper function to load from localStorage
+function loadFromLocalStorage() {
+  try {
     const storedBalance = localStorage.getItem('walletBalance');
     const storedTransactions = localStorage.getItem('transactions');
     
@@ -25,13 +71,11 @@ function loadWalletData() {
     
     console.log('✅ Wallet data loaded from localStorage:', { walletBalance, transactionCount: transactions.length });
     
-    // Also try to load from server as backup
-    loadWalletFromServer();
-    
+    // Update display
+    updateWalletDisplay();
+    loadTransactionHistory();
   } catch (error) {
-    console.error('❌ Error loading wallet data from localStorage:', error);
-    // Try to load from server as fallback
-    loadWalletFromServer();
+    console.error('❌ Error loading from localStorage:', error);
   }
 }
 
@@ -886,6 +930,25 @@ function addToWallet(amount, method) {
     // Save to server as backup
     saveWalletToServer();
     
+    // CRITICAL FIX: Also update Firebase if user is authenticated
+    try {
+      if (typeof authFunctions !== 'undefined' && authFunctions.isAuthenticated && authFunctions.isAuthenticated()) {
+        console.log('🔥 User is authenticated, syncing to Firebase...');
+        authFunctions.addToWalletFirebase(amount, method)
+          .then(() => {
+            console.log('✅ Firebase wallet updated successfully');
+          })
+          .catch(firebaseError => {
+            console.error('⚠️ Firebase update failed (localStorage still updated):', firebaseError);
+          });
+      } else {
+        console.log('ℹ️ User not authenticated, skipping Firebase sync');
+      }
+    } catch (firebaseError) {
+      console.error('⚠️ Firebase check/update failed:', firebaseError);
+      // Don't throw - localStorage update succeeded
+    }
+    
     // Update display
     updateWalletDisplay();
     updateWalletStats();
@@ -938,6 +1001,7 @@ function deductFromWallet(amount, description) {
     return false;
   }
   
+  const oldBalance = walletBalance;
   walletBalance -= amount;
   localStorage.setItem('walletBalance', walletBalance.toString());
   
@@ -953,6 +1017,25 @@ function deductFromWallet(amount, description) {
   
   transactions.unshift(transaction);
   localStorage.setItem('transactions', JSON.stringify(transactions));
+  
+  // CRITICAL FIX: Also update Firebase if user is authenticated
+  try {
+    if (typeof authFunctions !== 'undefined' && authFunctions.isAuthenticated && authFunctions.isAuthenticated()) {
+      console.log('🔥 User is authenticated, syncing deduction to Firebase...');
+      authFunctions.deductFromWalletFirebase(amount, description)
+        .then(() => {
+          console.log('✅ Firebase wallet deduction updated successfully');
+        })
+        .catch(firebaseError => {
+          console.error('⚠️ Firebase deduction failed (localStorage still updated):', firebaseError);
+        });
+    } else {
+      console.log('ℹ️ User not authenticated, skipping Firebase sync for deduction');
+    }
+  } catch (firebaseError) {
+    console.error('⚠️ Firebase check/update failed for deduction:', firebaseError);
+    // Don't throw - localStorage update succeeded
+  }
   
   updateWalletDisplay();
   updateWalletStats();
