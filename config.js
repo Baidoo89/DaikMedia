@@ -12,7 +12,7 @@ const CONFIG = {
   
                 // Google Sheets Configuration (Public URL only)
               GOOGLE_SHEETS: {
-                SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwrFafn8abm1S7uUWwsQuspKIUe1sKHHA40igiU-A-dDOHJPPOifsugPZqFRmpzI07zpw/exec'
+                SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzshMHmVL2Ce_cpR9hNmLNP3-p0Ow0QUzJYjgfBnitgmYWyOtpOC14eFpdTlq8ruwf_nQ/exec'
               }
 };
 
@@ -22,3 +22,4 @@ if (typeof module !== 'undefined' && module.exports) {
 } else {
   window.CONFIG = CONFIG;
 }
+https
